@@ -1,0 +1,7 @@
+{
+  "name": "Tata Motors TMSA-CV Workshop Portal & FIDS",
+  "description": "Tata Motors Service Transformation CRM, Airport-style FIDS Customer Lounge, Works Manager Board, and AI Telecaller VOC Engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
