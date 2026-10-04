@@ -1,260 +1,224 @@
 import React, { useState, useEffect } from "react";
 
-// --- Vector Commercial Vehicles & Passenger Cars ---
-const VEHICLE_SVGS: Record<string, React.ReactNode> = {
-  trailer: (
-    <svg viewBox="0 0 160 70" className="w-full h-full object-contain">
-      <rect x="6" y="20" width="95" height="32" rx="2" fill="#C2410C" />
-      <line x1="6" y1="28" x2="101" y2="28" stroke="#7C2D12" strokeWidth="1.5" />
-      <line x1="6" y1="36" x2="101" y2="36" stroke="#7C2D12" strokeWidth="1.5" />
-      <path d="M104 26 L128 26 L144 38 L144 52 L104 52 Z" fill="#DC2626" />
-      <path d="M108 30 L124 30 L136 38 L108 38 Z" fill="#1E293B" />
-      <circle cx="28" cy="54" r="10" fill="#0F172A" />
-      <circle cx="28" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="50" cy="54" r="10" fill="#0F172A" />
-      <circle cx="50" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="82" cy="54" r="10" fill="#0F172A" />
-      <circle cx="82" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="128" cy="54" r="10" fill="#0F172A" />
-      <circle cx="128" cy="54" r="5" fill="#94A3B8" />
-    </svg>
-  ),
-  tipper: (
-    <svg viewBox="0 0 160 70" className="w-full h-full object-contain">
-      <path d="M14 22 L96 22 L90 52 L14 52 Z" fill="#CA8A04" />
-      <path d="M98 26 L124 26 L140 38 L140 52 L98 52 Z" fill="#D97706" />
-      <path d="M102 30 L120 30 L132 38 L102 38 Z" fill="#1E293B" />
-      <circle cx="34" cy="54" r="10" fill="#0F172A" />
-      <circle cx="34" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="70" cy="54" r="10" fill="#0F172A" />
-      <circle cx="70" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="124" cy="54" r="10" fill="#0F172A" />
-      <circle cx="124" cy="54" r="5" fill="#94A3B8" />
-    </svg>
-  ),
-  lpt: (
-    <svg viewBox="0 0 160 70" className="w-full h-full object-contain">
-      <rect x="10" y="22" width="88" height="30" rx="2" fill="#E2E8F0" stroke="#94A3B8" strokeWidth="1.5" />
-      <path d="M102 26 L124 26 L138 38 L138 52 L102 52 Z" fill="#3B82F6" />
-      <path d="M106 30 L120 30 L132 38 L106 38 Z" fill="#1E293B" />
-      <circle cx="32" cy="54" r="10" fill="#0F172A" />
-      <circle cx="32" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="72" cy="54" r="10" fill="#0F172A" />
-      <circle cx="72" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="122" cy="54" r="10" fill="#0F172A" />
-      <circle cx="122" cy="54" r="5" fill="#94A3B8" />
-    </svg>
-  ),
-  signa: (
-    <svg viewBox="0 0 160 70" className="w-full h-full object-contain">
-      <rect x="14" y="24" width="82" height="28" rx="2" fill="#475569" />
-      <path d="M100 22 L126 22 L142 36 L142 52 L100 52 Z" fill="#0284C7" />
-      <path d="M104 26 L122 26 L134 36 L104 36 Z" fill="#0F172A" />
-      <circle cx="36" cy="54" r="10" fill="#0F172A" />
-      <circle cx="36" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="68" cy="54" r="10" fill="#0F172A" />
-      <circle cx="68" cy="54" r="5" fill="#94A3B8" />
-      <circle cx="124" cy="54" r="10" fill="#0F172A" />
-      <circle cx="124" cy="54" r="5" fill="#94A3B8" />
-    </svg>
-  ),
-  safari: (
-    <svg viewBox="0 0 160 65" className="w-full h-full object-contain filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-      <path d="M12 41 L22 19 C26 14 42 11 65 11 L120 11 C134 11 143 18 148 27 L154 41 C158 46 155 51 149 51 L9 51 C5 49 5 43 12 41 Z" fill="#B91C1C"/>
-      <path d="M32 19 L64 14 L114 14 L110 21 Z" fill="#1C1917"/>
-      <circle cx="35" cy="49" r="13" fill="#090D16"/>
-      <circle cx="35" cy="49" r="6" fill="#E2E8F0"/>
-      <circle cx="125" cy="49" r="13" fill="#090D16"/>
-      <circle cx="125" cy="49" r="6" fill="#E2E8F0"/>
-    </svg>
-  ),
-  harrier: (
-    <svg viewBox="0 0 160 65" className="w-full h-full object-contain filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-      <path d="M14 42 L25 22 C30 17 46 14 68 13 L112 13 C128 13 140 20 146 29 L154 42 C158 46 156 50 150 51 L10 51 C6 49 6 44 14 42 Z" fill="#047857"/>
-      <path d="M36 22 L62 16 L108 16 L104 23 Z" fill="#022C22"/>
-      <circle cx="36" cy="49" r="13" fill="#090D16"/>
-      <circle cx="36" cy="49" r="6" fill="#CBD5E1"/>
-      <circle cx="124" cy="49" r="13" fill="#090D16"/>
-      <circle cx="124" cy="49" r="6" fill="#CBD5E1"/>
-    </svg>
-  ),
-  nexon: (
-    <svg viewBox="0 0 160 65" className="w-full h-full object-contain filter drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
-      <path d="M18 40 L28 24 C33 20 45 18 65 17 L105 17 C120 17 135 22 142 30 L152 40 C156 44 156 48 152 50 L12 50 C8 48 8 43 18 40 Z" fill="#2563EB"/>
-      <circle cx="38" cy="48" r="12" fill="#090D16"/>
-      <circle cx="38" cy="48" r="6" fill="#94A3B8"/>
-      <circle cx="122" cy="48" r="12" fill="#090D16"/>
-      <circle cx="122" cy="48" r="6" fill="#94A3B8"/>
-    </svg>
-  )
-};
+// =========================================================================
+// REAL TATA MOTORS PASSENGER VEHICLES (PV) IMAGES MAPPING
+// High-resolution transparent background PNGs with authentic silhouettes & subtle drop shadow
+// =========================================================================
 
-interface Vehicle {
+export function getTataCarImage(
+  model: string,
+  className: string = "w-full h-full object-contain filter drop-shadow-[0_8px_14px_rgba(0,0,0,0.6)] transition-transform duration-200"
+) {
+  const norm = (model || "").toLowerCase();
+  let localPath = "/images/cars/safari.png";
+  let cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/138895/safari-exterior-right-front-three-quarter-40.png?isig=0&q=80";
+  let altText = "Tata Safari";
+
+  if (norm.includes("harrier")) {
+    localPath = "/images/cars/harrier.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/139139/harrier-exterior-right-front-three-quarter-7.png?isig=0&q=80";
+    altText = "Tata Harrier";
+  } else if (norm.includes("nexon")) {
+    localPath = "/images/cars/nexon.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/141867/nexon-exterior-right-front-three-quarter-79.png?isig=0&q=80";
+    altText = "Tata Nexon";
+  } else if (norm.includes("punch")) {
+    localPath = "/images/cars/punch.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/172825/punch-exterior-right-front-three-quarter-250.png?isig=0&q=80";
+    altText = "Tata Punch";
+  } else if (norm.includes("altroz")) {
+    localPath = "/images/cars/altroz.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/199863/altroz-exterior-right-front-three-quarter-13.png?isig=0&q=80";
+    altText = "Tata Altroz";
+  } else if (norm.includes("curvv")) {
+    localPath = "/images/cars/curvv.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/curvv-exterior-right-front-three-quarter-16.png?isig=0&q=80";
+    altText = "Tata Curvv";
+  } else if (norm.includes("safari")) {
+    localPath = "/images/cars/safari.png";
+    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/138895/safari-exterior-right-front-three-quarter-40.png?isig=0&q=80";
+    altText = "Tata Safari";
+  }
+
+  return (
+    <img
+      src={localPath}
+      alt={altText}
+      className={className}
+      loading="eager"
+      onError={(e) => {
+        // Fallback to official CDN if local file encounters any issue
+        if (e.currentTarget.src !== cdnFallback) {
+          e.currentTarget.src = cdnFallback;
+        }
+      }}
+    />
+  );
+}
+
+// Passenger Vehicle Database Record
+export interface Vehicle {
   id: string;
+  numberTag: number; // 1, 3, 5 style badge
   regNo: string;
-  model: string;
+  model: string; // e.g. "Safari", "Harrier", "Nexon", "Curvv", "Punch", "Altroz"
+  fullModelName: string;
   customer: string;
   serviceAdvisor: string;
   workType: string;
   promiseTime: string;
-  stageIndex: number;
+  stageIndex: number; // 0 to 5
+  wmStageIndex: number; // 0 to 9 (Gate In to Gate Out, No Fenced In/Out)
   flightStatus: "ON TIME" | "DELAYED" | "EXPEDITED" | "READY FOR PICKUP";
   delayMinutes?: number;
   isWalkIn: boolean;
-  svgKey: string;
   odometer: string;
   jobCard: string;
-  badgeType?: "gray" | "red" | "blue";
+  badgeType?: "red" | "blue" | "gray";
   badgeText?: string;
-  vehCategory?: string;
-  fencedInDate?: string;
-  promisedDeliveryDate?: string;
+  vehCategory: string;
+  gateInDate: string;
+  promisedDeliveryDate: string;
 }
 
-const INITIAL_VEHICLES: Vehicle[] = [
+// 100% Passenger Vehicles (PV) - Tata Safari, Harrier, Nexon, Curvv, Punch, Altroz
+export const INITIAL_VEHICLES: Vehicle[] = [
   {
     id: "V1",
-    regNo: "RJ27GD9268",
-    model: "Tractor Trailer 55 / LPS5530TC",
-    customer: "Rajasthan Logistics",
-    serviceAdvisor: "Hemendra Chundawat",
-    workType: "Running Repair",
-    promiseTime: "2026/12/24 9:30 AM",
-    stageIndex: 1,
+    numberTag: 1,
+    regNo: "UP81DJ6809",
+    model: "Safari",
+    fullModelName: "Tata Safari Dark Edition",
+    customer: "JOE DOE",
+    serviceAdvisor: "Bhawani Shankar",
+    workType: "Running Repair & 30k PMS",
+    promiseTime: "2026/12/24 04:30 PM",
+    stageIndex: 2,
+    wmStageIndex: 4,
     flightStatus: "ON TIME",
     isWalkIn: false,
-    svgKey: "trailer",
-    odometer: "84,200 KM",
-    jobCard: "SR/JC Not Available",
-    badgeType: "gray",
-    badgeText: "SR/JC Not Available",
-    vehCategory: "Commercial",
-    fencedInDate: "18 Jul '23, 12:03 PM",
-    promisedDeliveryDate: ""
-  },
-  {
-    id: "V2",
-    regNo: "RJ27GD5386",
-    model: "MAV Tippers 42 / SIGNA 4225.TK",
-    customer: "Parveen Vari",
-    serviceAdvisor: "Hemendra Chundawat",
-    workType: "Clutch & Suspension",
-    promiseTime: "2026/12/24 9:30 AM",
-    stageIndex: 2,
-    flightStatus: "DELAYED",
-    delayMinutes: 20,
-    isWalkIn: false,
-    svgKey: "tipper",
-    odometer: "142,544 KM",
+    odometer: "28,400 KM",
     jobCard: "JC-TML-DEL-2324-004429",
     badgeType: "red",
     badgeText: "JC-TML-DEL-2324-004429",
-    vehCategory: "Zippy Fleet",
-    fencedInDate: "16 Jul '23, 02:42 PM",
-    promisedDeliveryDate: "18 Jul '23, 06:44 PM"
-  },
-  {
-    id: "V3",
-    regNo: "GJ31T5456",
-    model: "MAV 28 / LPT 2821",
-    customer: "Gujarat Express Lines",
-    serviceAdvisor: "Hemendra Chundawat",
-    workType: "DEF Dosing Unit Inspection",
-    promiseTime: "2026/12/24 10:00 AM",
-    stageIndex: 1,
-    flightStatus: "ON TIME",
-    isWalkIn: false,
-    svgKey: "lpt",
-    odometer: "1,234 KM",
-    jobCard: "SR-TML-DEL-2324-004645",
-    badgeType: "blue",
-    badgeText: "SR-TML-DEL-2324-004645",
-    vehCategory: "DEF Only",
-    fencedInDate: "18 Jul '23, 11:48 AM",
-    promisedDeliveryDate: ""
-  },
-  {
-    id: "V4",
-    regNo: "RJ27GE1463",
-    model: "MAV 48 / LPT 4825",
-    customer: "Parveen Vari",
-    serviceAdvisor: "Imran Khan",
-    workType: "First Free Service",
-    promiseTime: "2026/12/24 10:30 AM",
-    stageIndex: 2,
-    flightStatus: "EXPEDITED",
-    isWalkIn: false,
-    svgKey: "signa",
-    odometer: "41,130 KM",
-    jobCard: "JC-TML-DEL-2324-004426",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004426",
-    vehCategory: "Zippy Fleet",
-    fencedInDate: "18 Jul '23, 11:50 AM",
-    promisedDeliveryDate: "18 Jul '23, 06:35 PM"
-  },
-  {
-    id: "V5",
-    regNo: "UP14ES6945",
-    model: "Tata Safari Dark",
-    customer: "Joe Doe",
-    serviceAdvisor: "Bhawani Shankar",
-    workType: "Periodic Maintenance 30k",
-    promiseTime: "2026/12/24 11:15 AM",
-    stageIndex: 3,
-    flightStatus: "ON TIME",
-    isWalkIn: false,
-    svgKey: "safari",
-    odometer: "28,400 KM",
-    jobCard: "JC-TML-DEL-2324-004810",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004810",
-    vehCategory: "Passenger SUV",
-    fencedInDate: "18 Jul '23, 01:10 PM",
-    promisedDeliveryDate: "18 Jul '23, 05:00 PM"
-  },
-  {
-    id: "V6",
-    regNo: "UP16DU8208",
-    model: "Tata Harrier Fearless",
-    customer: "Joe Doe",
-    serviceAdvisor: "Bhawani Shankar",
-    workType: "Brake Pad & General Check",
-    promiseTime: "2026/12/24 12:00 PM",
-    stageIndex: 4,
-    flightStatus: "ON TIME",
-    isWalkIn: false,
-    svgKey: "harrier",
-    odometer: "18,200 KM",
-    jobCard: "JC-TML-DEL-2324-004812",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004812",
-    vehCategory: "Passenger SUV",
-    fencedInDate: "18 Jul '23, 01:25 PM",
+    vehCategory: "Premium SUV",
+    gateInDate: "18 Jul '23, 09:15 AM",
     promisedDeliveryDate: "18 Jul '23, 04:30 PM"
   },
   {
-    id: "V7",
-    regNo: "UP14EJ9609",
-    model: "Tata Nexon EV",
-    customer: "Joe Doe",
+    id: "V2",
+    numberTag: 3,
+    regNo: "DL14CH2428",
+    model: "Harrier",
+    fullModelName: "Tata Harrier Fearless Red",
+    customer: "JOE DOE",
     serviceAdvisor: "Bhawani Shankar",
-    workType: "Software Update & Wash",
-    promiseTime: "2026/12/24 01:00 PM",
-    stageIndex: 3,
-    flightStatus: "ON TIME",
-    isWalkIn: true,
-    svgKey: "nexon",
-    odometer: "9,400 KM",
-    jobCard: "JC-TML-DEL-2324-004899",
+    workType: "Brake Pad & AC Overhaul",
+    promiseTime: "2026/12/24 05:15 PM",
+    stageIndex: 4,
+    wmStageIndex: 7,
+    flightStatus: "DELAYED",
+    delayMinutes: 20,
+    isWalkIn: false,
+    odometer: "38,200 KM",
+    jobCard: "JC-TML-DEL-2324-004812",
     badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004899",
-    vehCategory: "EV Fleet",
-    fencedInDate: "18 Jul '23, 02:00 PM",
+    badgeText: "JC-TML-DEL-2324-004812",
+    vehCategory: "Mid-Size SUV",
+    gateInDate: "18 Jul '23, 09:40 AM",
+    promisedDeliveryDate: "18 Jul '23, 05:15 PM"
+  },
+  {
+    id: "V3",
+    numberTag: 5,
+    regNo: "UP16CS7403",
+    model: "Nexon",
+    fullModelName: "Tata Nexon.ev Empowered",
+    customer: "JOE DOE",
+    serviceAdvisor: "Bhawani Shankar",
+    workType: "HV Battery Diagnostics",
+    promiseTime: "2026/12/24 03:45 PM",
+    stageIndex: 3,
+    wmStageIndex: 5,
+    flightStatus: "ON TIME",
+    isWalkIn: false,
+    odometer: "14,850 KM",
+    jobCard: "SR-TML-DEL-2324-004645",
+    badgeType: "blue",
+    badgeText: "SR-TML-DEL-2324-004645",
+    vehCategory: "Electric SUV",
+    gateInDate: "18 Jul '23, 10:00 AM",
     promisedDeliveryDate: "18 Jul '23, 03:45 PM"
+  },
+  {
+    id: "V4",
+    numberTag: 7,
+    regNo: "UP14EJ9609",
+    model: "Curvv",
+    fullModelName: "Tata Curvv EV Coupe",
+    customer: "ROHAN VERMA",
+    serviceAdvisor: "Hemendra Chundawat",
+    workType: "1st Free Service & Coating",
+    promiseTime: "2026/12/24 06:00 PM",
+    stageIndex: 1,
+    wmStageIndex: 2,
+    flightStatus: "EXPEDITED",
+    isWalkIn: true,
+    odometer: "4,500 KM",
+    jobCard: "JC-TML-DEL-2324-004426",
+    badgeType: "red",
+    badgeText: "JC-TML-DEL-2324-004426",
+    vehCategory: "Coupe SUV",
+    gateInDate: "18 Jul '23, 10:30 AM",
+    promisedDeliveryDate: "18 Jul '23, 06:00 PM"
+  },
+  {
+    id: "V5",
+    numberTag: 9,
+    regNo: "DL5CS0664",
+    model: "Punch",
+    fullModelName: "Tata Punch.ev Accomplished",
+    customer: "PRIYA NAIR",
+    serviceAdvisor: "Imran Khan",
+    workType: "Routine Checkup & Detailing",
+    promiseTime: "2026/12/24 02:00 PM",
+    stageIndex: 5,
+    wmStageIndex: 8,
+    flightStatus: "READY FOR PICKUP",
+    isWalkIn: false,
+    odometer: "12,340 KM",
+    jobCard: "JC-TML-DEL-2324-004810",
+    badgeType: "red",
+    badgeText: "JC-TML-DEL-2324-004810",
+    vehCategory: "Compact SUV",
+    gateInDate: "18 Jul '23, 08:30 AM",
+    promisedDeliveryDate: "18 Jul '23, 02:00 PM"
+  },
+  {
+    id: "V6",
+    numberTag: 11,
+    regNo: "MH01EK9921",
+    model: "Altroz",
+    fullModelName: "Tata Altroz Racer Edition",
+    customer: "SURESH NAMBIAR",
+    serviceAdvisor: "Bhawani Shankar",
+    workType: "Wheel Alignment & Engine Tune",
+    promiseTime: "2026/12/24 05:45 PM",
+    stageIndex: 0,
+    wmStageIndex: 0,
+    flightStatus: "ON TIME",
+    isWalkIn: false,
+    odometer: "21,100 KM",
+    jobCard: "SR-TML-DEL-2324-004899",
+    badgeType: "blue",
+    badgeText: "SR-TML-DEL-2324-004899",
+    vehCategory: "Premium Hatchback",
+    gateInDate: "18 Jul '23, 11:15 AM",
+    promisedDeliveryDate: "18 Jul '23, 05:45 PM"
   }
 ];
 
+// Service Status Pipeline Columns (Receptionist Table)
 const STATUS_STAGES = [
   { key: "received", label: "Vehicle Received" },
   { key: "ro_created", label: "RO Created" },
@@ -264,8 +228,8 @@ const STATUS_STAGES = [
   { key: "ready", label: "Ready For Delivery" }
 ];
 
+// Works Manager Pipeline Stages (Fenced In and Fenced Out strictly removed)
 const WM_PIPELINE_STAGES = [
-  "Fenced In",
   "Gate In",
   "SR",
   "JC",
@@ -275,21 +239,50 @@ const WM_PIPELINE_STAGES = [
   "Floor Out",
   "Road Test",
   "JC Closed",
-  "Gate Out",
-  "Fenced Out"
+  "Gate Out"
 ];
+
+// Works Manager Milestone Filter Buttons (Counts strictly removed, Fenced In/Out removed)
+const WM_FILTER_BUTTONS = [
+  "All ▾",
+  "GATE IN",
+  "SR",
+  "JC",
+  "FLOOR IN",
+  "WIP",
+  "WASHING",
+  "FLOOR OUT",
+  "ROAD TEST",
+  "JC CLOSED",
+  "GATE OUT"
+];
+
+interface CrmAnalysisResult {
+  english_transcript: string;
+  voice_of_customer_voc: string;
+  crm_remarks: string;
+  suggested_status: string;
+  suggested_sub_status: string;
+}
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{ role: "Receptionist" | "WorksManager"; name: string; username: string } | null>(null);
   const [usernameInput, setUsernameInput] = useState("NP7_1007960");
   const [passwordInput, setPasswordInput] = useState("••••••••••");
 
-  const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status">("appointments");
+  const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status" | "ai-crm">("appointments");
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
   const [countdown, setCountdown] = useState<number>(20);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // AI CRM Telecaller State
+  const [selectedSample, setSelectedSample] = useState<string>("nexon_ev_pms");
+  const [customTranscript, setCustomTranscript] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [crmResult, setCrmResult] = useState<CrmAnalysisResult | null>(null);
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -325,6 +318,7 @@ export default function App() {
     } catch {}
   };
 
+  // 20-Second Refresh Countdown Engine
   useEffect(() => {
     if (!currentUser) return;
 
@@ -337,9 +331,11 @@ export default function App() {
             const randIdx = Math.floor(Math.random() * next.length);
             if (next[randIdx].stageIndex < STATUS_STAGES.length - 1) {
               const nextStage = next[randIdx].stageIndex + 1;
+              const nextWmStage = Math.min(next[randIdx].wmStageIndex + 1, WM_PIPELINE_STAGES.length - 1);
               next[randIdx] = {
                 ...next[randIdx],
                 stageIndex: nextStage,
+                wmStageIndex: nextWmStage,
                 flightStatus: nextStage === STATUS_STAGES.length - 1 ? "READY FOR PICKUP" : next[randIdx].flightStatus
               };
             }
@@ -357,24 +353,66 @@ export default function App() {
   const advanceVehicleMilestone = (id: string) => {
     setVehicles((prev) => prev.map((v) => {
       if (v.id === id) {
-        const nextIdx = v.stageIndex < STATUS_STAGES.length - 1 ? v.stageIndex + 1 : 0;
+        const nextWmIdx = (v.wmStageIndex + 1) % WM_PIPELINE_STAGES.length;
+        const nextStageIdx = Math.min(
+          STATUS_STAGES.length - 1,
+          Math.floor((nextWmIdx / (WM_PIPELINE_STAGES.length - 1)) * (STATUS_STAGES.length - 1))
+        );
         return {
           ...v,
-          stageIndex: nextIdx,
-          flightStatus: nextIdx === STATUS_STAGES.length - 1 ? "READY FOR PICKUP" : "ON TIME"
+          wmStageIndex: nextWmIdx,
+          stageIndex: nextStageIdx,
+          flightStatus: nextWmIdx >= 8 ? "READY FOR PICKUP" : "ON TIME"
         };
       }
       return v;
     }));
   };
 
+  // Run AI CRM Analysis
+  const runAiAnalysis = async (sampleKey?: string) => {
+    setIsAnalyzing(true);
+    try {
+      const payload: Record<string, string> = {};
+      if (sampleKey) {
+        payload.sampleKey = sampleKey;
+      } else if (customTranscript) {
+        payload.transcriptText = customTranscript;
+      } else {
+        payload.sampleKey = selectedSample;
+      }
+
+      const res = await fetch("/api/analyze-call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      setCrmResult(data);
+    } catch {
+      // In-app fallback if server request fails
+      setCrmResult({
+        english_transcript: "Telecaller: Good morning, this is Bhawani Shankar from Pasco Tata Motors regarding your Tata Nexon EV (MH01EK9921). Your 20,000 km PMS is due.\nCustomer: Yes, I noticed a slight squeak when applying brakes at low speeds, and the AC filter needs replacement.\nTelecaller: We will inspect brake pads and replace the AC filter. Can I book for tomorrow 9:30 AM?\nCustomer: Yes, tomorrow 9:30 AM is confirmed.",
+        voice_of_customer_voc: "Customer confirmed appointment for tomorrow 9:30 AM for Nexon EV 20k PMS with brake squeak inspection and cabin AC filter change.",
+        crm_remarks: "Nexon EV (MH01EK9921) confirmed for 20k PMS + HV Check. Special customer requests: check brake squeak and AC filter replacement.",
+        suggested_status: "Appointment Booked",
+        suggested_sub_status: "Confirmed"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Indian Number Plate badge with authentic IND blue strip
   const renderIndianPlate = (plate: string) => (
-    <div className="inline-flex items-center bg-white text-black font-bold font-mono tracking-wider px-2 py-0.5 rounded border border-gray-400 text-xs shadow-sm">
-      <div className="flex flex-col items-center mr-1 text-[7px] leading-none text-blue-900 border-r border-gray-300 pr-1">
-        <span>IND</span>
-        <div className="w-1.5 h-1.5 rounded-full bg-blue-700 mt-0.5"></div>
+    <div className="inline-flex items-center bg-white text-black font-mono px-1.5 py-0.5 rounded shadow-xs border border-slate-300">
+      <div className="flex flex-col items-center justify-center bg-[#003399] text-white px-1 py-0.5 rounded-xs mr-1.5 leading-none">
+        <div className="w-2 h-2 rounded-full border border-dotted border-white/90 flex items-center justify-center mb-0.5">
+          <div className="w-0.5 h-0.5 rounded-full bg-white"></div>
+        </div>
+        <span className="text-[6px] font-sans font-bold tracking-tighter">IND</span>
       </div>
-      <span>{plate}</span>
+      <span className="text-xs font-black text-slate-900 tracking-wider font-mono">{plate}</span>
     </div>
   );
 
@@ -407,15 +445,15 @@ export default function App() {
           </div>
           <div className="bg-[#002244] text-white px-8 py-3.5 shadow-md flex items-center justify-between">
             <span className="font-bold tracking-widest text-lg">TATA MOTORS</span>
-            <span className="text-xs text-blue-200">TMSA-CV Workshop Portal</span>
+            <span className="text-xs text-blue-200">TMSA-PV Workshop Portal</span>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-center items-center p-4">
           <div className="bg-white border border-slate-200 rounded-lg shadow-xl p-8 w-full max-w-sm">
             <div className="text-center mb-6">
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">TMSA-CV Workshop Portal</h2>
-              <p className="text-xs text-slate-500 mt-1">Enter your CRM username &amp; password to login</p>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">TMSA-PV Workshop Portal</h2>
+              <p className="text-xs text-slate-500 mt-1">Select your role to access Tata Motors live screens</p>
             </div>
 
             <div className="space-y-4">
@@ -441,20 +479,22 @@ export default function App() {
               <div className="pt-2 flex flex-col space-y-2">
                 <button
                   onClick={() => setCurrentUser({ role: "Receptionist", name: "Priya Sharma (Reception)", username: "REC_DELHI_01" })}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-xs font-semibold transition shadow-sm"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5"
                 >
-                  Sign In as Receptionist
+                  <span>📺 Customer Lounge &amp; FIDS Display</span>
                 </button>
                 <button
                   onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_1007960" })}
-                  className="w-full bg-[#002244] hover:bg-[#001730] text-white py-2 rounded text-xs font-semibold transition shadow-sm"
+                  className="w-full bg-[#002244] hover:bg-[#001730] text-white py-2.5 rounded text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5"
                 >
-                  Sign In as Works Manager
+                  <span>🔧 Works Manager Workshop Board</span>
                 </button>
               </div>
             </div>
           </div>
-          <div className="text-xs text-slate-400 mt-6 font-mono">Version: 1.0.3 Date: 28-06-2023</div>
+          <div className="text-xs text-slate-500 mt-6 font-mono text-center">
+            Tata Motors Passenger Vehicles (PV) • Pasco Motors Dealership (1007960)
+          </div>
         </div>
 
         <div className="border-t border-slate-200 py-3 text-center text-xs text-slate-400">
@@ -465,18 +505,27 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW 2: WORKS MANAGER INTERFACE (4 Links Removed)
+  // VIEW 2: WORKS MANAGER INTERFACE (Tata Passenger Vehicles & Real Images)
   // =========================================================================
   if (currentUser.role === "WorksManager") {
     return (
       <div className="min-h-screen flex flex-col bg-[#F3F4F6] text-slate-900 font-sans select-none">
-        {/* Top Header without the 4 inactive links */}
+        {/* Top Header */}
         <div className="bg-[#002244] text-white px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <span className="font-extrabold text-base tracking-wider">TATA MOTORS</span>
+            <span className="text-xs text-blue-200 border-l border-blue-900 pl-3">TMSA-PV Works Manager</span>
           </div>
 
           <div className="flex items-center space-x-5">
+            {/* Quick Switch to Lounge View */}
+            <button
+              onClick={() => setCurrentUser({ role: "Receptionist", name: "Priya Sharma (Reception)", username: "REC_DELHI_01" })}
+              className="bg-blue-800/60 hover:bg-blue-700 border border-blue-600 text-white text-[11px] px-2.5 py-1 rounded transition"
+            >
+              📺 Open Lounge View
+            </button>
+
             {/* 20-Second Refresh Meter */}
             <div className="flex items-center space-x-1.5 bg-slate-900 border border-slate-700 px-2 py-1 rounded">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
@@ -494,7 +543,7 @@ export default function App() {
 
             <div className="text-right border-l border-blue-900 pl-4">
               <div className="font-bold text-xs">TATA MOTORS AUTHORIZED SERVICE - 1007960</div>
-              <div className="text-[10px] text-blue-200 font-mono">DELHI WORKSHOP | 1-9FRGY0Z</div>
+              <div className="text-[10px] text-blue-200 font-mono">DELHI PV WORKSHOP | 1-9FRGY0Z</div>
             </div>
 
             <div className="flex items-center space-x-2 border-l border-blue-900 pl-3">
@@ -519,8 +568,8 @@ export default function App() {
             <span className="font-bold text-blue-900 tracking-wider">TATA MOTORS</span>
             <span className="text-[11px] text-gray-400">Connecting Aspirations</span>
             <span className="text-gray-300">|</span>
-            <span className="font-semibold text-gray-700">TATA MOTORS WORKSHOP-1007960</span>
-            <span className="text-gray-400 text-[11px]">Commercial Vehicle Track &amp; Trace</span>
+            <span className="font-semibold text-gray-700">TATA MOTORS PASSENGER VEHICLES WORKSHOP-1007960</span>
+            <span className="text-gray-400 text-[11px]">Passenger Vehicle (PV) Track &amp; Trace</span>
           </div>
           <div className="text-right font-mono text-[11px] text-gray-600">
             <div>Fri, 21 July '23</div>
@@ -528,54 +577,53 @@ export default function App() {
           </div>
         </div>
 
-        {/* Milestone Metrics Ribbon */}
+        {/* Milestone Metrics Ribbon (Counts removed, Fenced In/Out removed) */}
         <div className="bg-[#E5E7EB] border-b border-gray-300 px-6 py-2 overflow-x-auto flex items-center space-x-1.5 text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm text-gray-800">All ▾</span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">FENCED IN <b className="text-blue-900 ml-1">11</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">GATE IN <b className="text-blue-900 ml-1">6</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">SR <b className="text-blue-900 ml-1">6</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">JC <b className="text-blue-900 ml-1">0</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">FLOOR IN <b className="text-blue-900 ml-1">3</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">WIP <b className="text-blue-900 ml-1">9</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">WASHING <b className="text-blue-900 ml-1">4</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">FLOOR OUT <b className="text-blue-900 ml-1">0</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">ROAD TEST <b className="text-blue-900 ml-1">0</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">JC CLOSED <b className="text-blue-900 ml-1">51</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">GATE OUT <b className="text-blue-900 ml-1">10</b></span>
-          <span className="bg-white border border-gray-300 px-2.5 py-1 rounded shadow-sm">FENCED OUT <b className="text-blue-900 ml-1">0</b></span>
+          {WM_FILTER_BUTTONS.map((label, idx) => (
+            <span
+              key={label}
+              className={`border border-gray-300 px-2.5 py-1 rounded shadow-xs cursor-pointer transition ${
+                idx === 0 ? "bg-white text-gray-900 font-bold" : "bg-white hover:bg-gray-100 text-gray-700"
+              }`}
+            >
+              {label}
+            </span>
+          ))}
         </div>
 
-        {/* Vehicles Board */}
+        {/* Vehicles Board with Realistic Tata Car Images */}
         <div className="flex-1 p-6 space-y-4 overflow-y-auto">
           {vehicles.map((v) => (
             <div
               key={v.id}
-              className="bg-white border border-gray-300 rounded shadow-sm p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs"
+              className="bg-white border border-gray-300 rounded shadow-xs p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs"
             >
-              <div className="flex flex-col items-center justify-center min-w-[150px]">
-                <div className="w-28 h-14 flex items-center justify-center bg-gray-50 rounded border border-gray-200 p-1 mb-1">
-                  {VEHICLE_SVGS[v.svgKey] || VEHICLE_SVGS.trailer}
+              {/* PV Real Image Box & Tag Badge */}
+              <div className="flex flex-col items-center justify-center min-w-[160px]">
+                <div className="w-36 h-20 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-1.5 mb-1.5 shadow-xs overflow-hidden">
+                  {getTataCarImage(v.model)}
                 </div>
                 {v.badgeType === "red" && (
-                  <span className="bg-[#D32F2F] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm truncate max-w-[150px]">
+                  <span className="bg-[#D32F2F] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs truncate max-w-[150px]">
                     {v.badgeText}
                   </span>
                 )}
                 {v.badgeType === "blue" && (
-                  <span className="bg-[#1976D2] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm truncate max-w-[150px]">
+                  <span className="bg-[#1976D2] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs truncate max-w-[150px]">
                     {v.badgeText}
                   </span>
                 )}
                 {v.badgeType === "gray" && (
-                  <span className="bg-white border border-gray-300 text-gray-500 text-[10px] font-semibold px-2 py-0.5 rounded shadow-sm">
+                  <span className="bg-white border border-gray-300 text-gray-500 text-[10px] font-semibold px-2 py-0.5 rounded shadow-xs">
                     {v.badgeText}
                   </span>
                 )}
               </div>
 
+              {/* Meta Specifications */}
               <div className="grid grid-cols-[70px_1fr] gap-y-0.5 text-[11px] min-w-[190px]">
                 <span className="text-gray-500">Veh. No:</span>
-                <span className="font-extrabold text-gray-900">{v.regNo}</span>
+                <span className="font-extrabold text-gray-900 font-mono">{v.regNo}</span>
 
                 <span className="text-gray-500">SA Name:</span>
                 <span className="font-semibold text-gray-800">{v.serviceAdvisor}</span>
@@ -588,41 +636,42 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-[70px_1fr] gap-y-0.5 text-[11px] min-w-[210px] border-l border-gray-200 pl-4">
-                <span className="text-gray-500 truncate" colSpan={2}>
-                  <b className="text-gray-900 block">{v.model}</b>
-                </span>
+                <div className="col-span-2 text-gray-500 truncate">
+                  <b className="text-gray-900 block">{v.fullModelName}</b>
+                </div>
 
                 <span className="text-gray-500">TL Name:</span>
                 <span className="font-semibold text-gray-800">PARVEEN VARI</span>
 
                 <span className="text-gray-500">Veh. Type:</span>
-                <span className="font-bold text-red-600">AMC</span>
+                <span className="font-bold text-blue-700">{v.vehCategory?.includes("EV") ? "EV PASSENGER" : "PV PASSENGER"}</span>
 
                 <span className="text-gray-500">Veh. Category:</span>
-                <span className="text-gray-800">Zippy</span>
+                <span className="text-gray-800">{v.vehCategory}</span>
               </div>
 
+              {/* Works Manager Stepper (Fenced In/Out strictly removed) */}
               <div className="flex-1 flex flex-col justify-center px-4">
                 <div className="relative flex items-center justify-between">
                   <div className="absolute top-2.5 left-2 right-2 h-0.5 bg-gray-200 -z-0"></div>
                   <div
                     className="absolute top-2.5 left-2 h-0.5 bg-emerald-500 -z-0 transition-all duration-300"
-                    style={{ width: `${(v.stageIndex / (STATUS_STAGES.length - 1)) * 96}%` }}
+                    style={{ width: `${(v.wmStageIndex / (WM_PIPELINE_STAGES.length - 1)) * 96}%` }}
                   ></div>
 
                   {WM_PIPELINE_STAGES.map((label, idx) => {
-                    const isCompleted = idx < v.stageIndex;
-                    const isCurrent = idx === v.stageIndex;
+                    const isCompleted = idx < v.wmStageIndex;
+                    const isCurrent = idx === v.wmStageIndex;
 
                     return (
                       <div
                         key={label}
                         className="flex flex-col items-center z-10 cursor-pointer"
                         onClick={() => advanceVehicleMilestone(v.id)}
-                        title={`Update to ${label}`}
+                        title={`Click to set stage to ${label}`}
                       >
                         {label === "WIP" && isCurrent ? (
-                          <div className="w-5 h-5 rotate-45 bg-[#4CAF50] border-2 border-white shadow flex items-center justify-center">
+                          <div className="w-5 h-5 rotate-45 bg-[#4CAF50] border-2 border-white shadow-xs flex items-center justify-center">
                             <span className="-rotate-45 text-[8px] font-bold text-white">●</span>
                           </div>
                         ) : (
@@ -649,16 +698,17 @@ export default function App() {
                   })}
                 </div>
 
-                <div className="flex justify-between items-center text-[10px] text-gray-500 mt-2 pt-1 border-t border-gray-100">
+                {/* Gate In & Promised Delivery Timestamps (Fenced In/Out removed) */}
+                <div className="flex justify-between items-center text-[10px] text-gray-500 mt-2.5 pt-1.5 border-t border-gray-100">
                   <div>
-                    FENCED IN: <b className="text-gray-800">{v.fencedInDate || "18 Jul '23, 11:48 AM"}</b>
+                    GATE IN: <b className="text-gray-800">{v.gateInDate || "18 Jul '23, 10:00 AM"}</b>
                   </div>
                   <div className="flex items-center space-x-3">
                     {renderFlightBadge(v.flightStatus, v.delayMinutes)}
-                    <span>PROMISED DELIVERY: <b className="text-gray-800">{v.promiseTime}</b></span>
+                    <span>PROMISED DELIVERY: <b className="text-gray-800">{v.promisedDeliveryDate || v.promiseTime}</b></span>
                     <button
                       onClick={() => advanceVehicleMilestone(v.id)}
-                      className="bg-[#002244] hover:bg-[#001730] text-white text-[10px] px-2 py-0.5 rounded font-semibold transition"
+                      className="bg-[#002244] hover:bg-[#001730] text-white text-[10px] px-2.5 py-0.5 rounded font-semibold transition shadow-xs"
                     >
                       Advance ➔
                     </button>
@@ -673,7 +723,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW 3: RECEPTIONIST INTERFACE (Customer Lounge Screens)
+  // VIEW 3: RECEPTIONIST INTERFACE (Customer Lounge & AI Telecaller CRM)
   // =========================================================================
   return (
     <div className="min-h-screen flex flex-col bg-[#040911] text-white font-sans select-none">
@@ -681,7 +731,7 @@ export default function App() {
         <div className="flex items-center space-x-4">
           <span className="font-extrabold text-blue-400 tracking-wider text-base">TATA MOTORS</span>
           <span className="text-gray-500">|</span>
-          <span className="text-gray-300">TATA MOTORS AUTHORIZED SERVICE (1007960)</span>
+          <span className="text-gray-300">TATA MOTORS PASSENGER VEHICLES LOUNGE (1007960)</span>
           <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800 text-[10px]">
             {currentUser.name}
           </span>
@@ -691,7 +741,7 @@ export default function App() {
           <button
             onClick={() => setReceptionTab("appointments")}
             className={`px-3 py-1 rounded font-semibold transition ${
-              receptionTab === "appointments" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+              receptionTab === "appointments" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
           >
             1. Appointments
@@ -699,7 +749,7 @@ export default function App() {
           <button
             onClick={() => setReceptionTab("walkin")}
             className={`px-3 py-1 rounded font-semibold transition ${
-              receptionTab === "walkin" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+              receptionTab === "walkin" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
           >
             2. Walk-In Customers
@@ -707,14 +757,30 @@ export default function App() {
           <button
             onClick={() => setReceptionTab("status")}
             className={`px-3 py-1 rounded font-semibold transition ${
-              receptionTab === "status" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
+              receptionTab === "status" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
           >
             3. Vehicle Status
           </button>
+          <button
+            onClick={() => setReceptionTab("ai-crm")}
+            className={`px-3 py-1 rounded font-semibold transition flex items-center space-x-1 ${
+              receptionTab === "ai-crm" ? "bg-purple-600 text-white shadow-xs" : "text-purple-300 hover:text-white"
+            }`}
+          >
+            <span>🎙️ AI Telecaller CRM (VOC)</span>
+          </button>
         </nav>
 
         <div className="flex items-center space-x-3">
+          {/* Quick Switch to Works Manager */}
+          <button
+            onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_1007960" })}
+            className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-[11px] px-2.5 py-1 rounded transition"
+          >
+            🔧 Workshop Board
+          </button>
+
           <div className="flex items-center space-x-1.5 bg-slate-900 border border-slate-700 px-2 py-1 rounded">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
             <span className="text-[11px] text-gray-300 font-mono">Refresh: <b className="text-cyan-400">{countdown}s</b></span>
@@ -738,46 +804,57 @@ export default function App() {
         </div>
       </header>
 
-      {/* RECEPTIONIST SCREEN 1: APPOINTMENTS */}
+      {/* RECEPTIONIST SCREEN 1: APPOINTMENTS (Card Style with Real Tata Vehicles) */}
       {receptionTab === "appointments" && (
         <main className="flex-1 flex flex-col p-6 overflow-y-auto">
           <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
             <div className="flex items-center space-x-3">
               <span className="text-xl font-bold tracking-tight text-white uppercase">Appointments</span>
-              <span className="text-xs text-gray-400 font-mono">TATA MOTORS CUSTOMER LOUNGE DISPLAY</span>
+              <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
             </div>
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
           <div className="flex-1 grid grid-cols-12 gap-5">
+            {/* In Progress Cards Grid */}
             <div className="col-span-8 flex flex-col">
               <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
                 In Progress
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {vehicles.filter(v => !v.isWalkIn).slice(0, 6).map((item, idx) => (
-                  <div key={item.id} className="bg-[#0a121d] border border-gray-800 rounded p-3 flex flex-col justify-between">
+              <div className="grid grid-cols-3 gap-3.5">
+                {vehicles.filter(v => !v.isWalkIn).slice(0, 6).map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg relative group hover:border-cyan-500/50 transition-colors"
+                  >
+                    {/* Top Row: Square White Number Tag + Status Badge */}
                     <div className="flex items-center justify-between">
-                      <span className="w-5 h-5 flex items-center justify-center bg-gray-800 text-white text-[10px] font-bold rounded">
-                        {idx + 1}
-                      </span>
+                      <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
+                        {item.numberTag}
+                      </div>
                       {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
-                    <div className="my-2 h-16 flex items-center justify-center">
-                      {VEHICLE_SVGS[item.svgKey] || VEHICLE_SVGS.safari}
+
+                    {/* Center: Real High-Quality Transparent PNG Image of Tata Vehicle */}
+                    <div className="my-2 h-24 flex items-center justify-center px-1">
+                      {getTataCarImage(item.model)}
                     </div>
-                    <div className="flex items-center justify-between my-1">
-                      <span className="font-bold text-blue-400 text-sm truncate max-w-[120px]">{item.model.split(" ")[0]}</span>
+
+                    {/* Middle: Cyan Model Name on Left + IND License Plate on Right */}
+                    <div className="flex items-center justify-between my-2">
+                      <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
                       {renderIndianPlate(item.regNo)}
                     </div>
-                    <div className="grid grid-cols-2 text-[10px] pt-2 border-t border-gray-800 mt-2 text-gray-400">
+
+                    {/* Bottom Ribbon: Customer & Service Advisor */}
+                    <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
                       <div>
-                        <span className="block text-[8px] text-gray-500 uppercase">Customer</span>
-                        <span className="font-medium text-white truncate block">{item.customer}</span>
+                        <div className="text-[9px] text-gray-400 font-normal">Customer</div>
+                        <div className="font-bold text-white uppercase truncate">{item.customer}</div>
                       </div>
-                      <div className="text-right">
-                        <span className="block text-[8px] text-gray-500 uppercase">Service Advisor</span>
-                        <span className="font-medium text-white truncate block">{item.serviceAdvisor}</span>
+                      <div>
+                        <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
+                        <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
                       </div>
                     </div>
                   </div>
@@ -785,25 +862,42 @@ export default function App() {
               </div>
             </div>
 
+            {/* Next In Queue Cards */}
             <div className="col-span-4 flex flex-col">
               <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
                 Next In Queue
               </div>
               <div className="space-y-3">
                 {vehicles.slice(0, 2).map((item, idx) => (
-                  <div key={`queue-${item.id}`} className="bg-[#0a121d] border border-gray-800 rounded p-3 flex flex-col justify-between">
+                  <div
+                    key={`queue-${item.id}`}
+                    className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg relative"
+                  >
                     <div className="flex items-center justify-between">
-                      <span className="w-5 h-5 flex items-center justify-center bg-gray-800 text-white text-[10px] font-bold rounded">
+                      <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
                         {idx + 1}
-                      </span>
+                      </div>
                       {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
-                    <div className="my-2 h-14 flex items-center justify-center">
-                      {VEHICLE_SVGS[item.svgKey] || VEHICLE_SVGS.harrier}
+
+                    <div className="my-1 h-20 flex items-center justify-center px-1">
+                      {getTataCarImage(item.model)}
                     </div>
-                    <div className="flex items-center justify-between my-1">
-                      <span className="font-bold text-blue-400 text-sm truncate">{item.model.split(" ")[0]}</span>
+
+                    <div className="flex items-center justify-between my-2">
+                      <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
                       {renderIndianPlate(item.regNo)}
+                    </div>
+
+                    <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
+                      <div>
+                        <div className="text-[9px] text-gray-400 font-normal">Customer</div>
+                        <div className="font-bold text-white uppercase truncate">{item.customer}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
+                        <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -840,28 +934,36 @@ export default function App() {
               <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
                 In Progress
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 gap-3.5">
                 {vehicles.filter(v => v.isWalkIn).map((item) => (
-                  <div key={item.id} className="bg-[#0a121d] border border-gray-800 rounded p-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="w-5 h-5 flex items-center justify-center bg-gray-800 text-white text-[10px] font-bold rounded">1</span>
+                  <div
+                    key={item.id}
+                    className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
+                        {item.numberTag}
+                      </div>
                       {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
-                    <div className="h-16 flex items-center justify-center">
-                      {VEHICLE_SVGS[item.svgKey] || VEHICLE_SVGS.nexon}
+
+                    <div className="my-2 h-24 flex items-center justify-center px-1">
+                      {getTataCarImage(item.model)}
                     </div>
-                    <div className="flex justify-between items-center my-2">
-                      <span className="font-bold text-blue-400 text-sm">{item.model}</span>
+
+                    <div className="flex items-center justify-between my-2">
+                      <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
                       {renderIndianPlate(item.regNo)}
                     </div>
-                    <div className="grid grid-cols-2 text-[10px] pt-2 border-t border-gray-800 mt-2 text-gray-400">
+
+                    <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
                       <div>
-                        <span className="block text-[8px] text-gray-500 uppercase">Customer</span>
-                        <span className="font-medium text-white truncate block">{item.customer}</span>
+                        <div className="text-[9px] text-gray-400 font-normal">Customer</div>
+                        <div className="font-bold text-white uppercase truncate">{item.customer}</div>
                       </div>
-                      <div className="text-right">
-                        <span className="block text-[8px] text-gray-500 uppercase">Service Advisor</span>
-                        <span className="font-medium text-white truncate block">{item.serviceAdvisor}</span>
+                      <div>
+                        <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
+                        <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
                       </div>
                     </div>
                   </div>
@@ -869,8 +971,9 @@ export default function App() {
               </div>
             </div>
 
-            <div className="col-span-4 border border-dashed border-gray-800 rounded flex flex-col items-center justify-center text-gray-500 text-xs p-6 text-center">
-              <span>No pending unallocated walk-ins in queue.</span>
+            <div className="col-span-4 border border-dashed border-gray-800 rounded flex flex-col items-center justify-center text-gray-400 text-xs p-6 text-center">
+              <span className="font-semibold text-gray-300 mb-1">Fast Entry Bay</span>
+              <span>All currently registered walk-in passenger vehicles are active on the board.</span>
             </div>
           </div>
         </main>
@@ -888,6 +991,7 @@ export default function App() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-[11px]">
+                  <th className="py-3 px-3">Vehicle</th>
                   <th className="py-3 px-3">Registration</th>
                   <th className="py-3 px-3">Service Advisor</th>
                   <th className="py-3 px-3">Work Type</th>
@@ -902,6 +1006,11 @@ export default function App() {
               <tbody className="divide-y divide-gray-800">
                 {vehicles.map((v) => (
                   <tr key={v.id} className="hover:bg-[#0c1827] transition">
+                    <td className="py-2 px-3">
+                      <div className="w-24 h-14 bg-[#071322] rounded p-1 overflow-hidden flex items-center justify-center border border-gray-800">
+                        {getTataCarImage(v.model)}
+                      </div>
+                    </td>
                     <td className="py-3 px-3 font-mono">{renderIndianPlate(v.regNo)}</td>
                     <td className="py-3 px-3 font-semibold text-gray-200">{v.serviceAdvisor}</td>
                     <td className="py-3 px-3 text-gray-300">{v.workType}</td>
@@ -924,6 +1033,182 @@ export default function App() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </main>
+      )}
+
+      {/* RECEPTIONIST SCREEN 4: AI TELECALLER CRM (VOC Engine) */}
+      {receptionTab === "ai-crm" && (
+        <main className="flex-1 flex flex-col p-6 overflow-y-auto">
+          <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
+            <div>
+              <span className="text-xl font-bold tracking-tight text-white uppercase">AI Telecaller VOC Engine</span>
+              <p className="text-xs text-gray-400 mt-0.5">Tata Motors Service Transformation CRM • Hindi, English &amp; Hinglish Audio Intelligence</p>
+            </div>
+            <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
+          </div>
+
+          <div className="grid grid-cols-12 gap-6 flex-1">
+            {/* Left Column: Recording / Call Selection */}
+            <div className="col-span-5 bg-[#0b1726] border border-gray-800 rounded-lg p-5 flex flex-col space-y-4">
+              <h3 className="font-bold text-sm text-cyan-400 flex items-center space-x-2">
+                <span>📞 Select Telecaller Call Recording</span>
+              </h3>
+
+              <div className="space-y-2.5">
+                {[
+                  {
+                    id: "nexon_ev_pms",
+                    title: "Tata Nexon.ev • 20k PMS & Brake Squeak Concern",
+                    meta: "Customer: Vineeth Hari • Reg: MH01EK9921 • Lang: Hinglish",
+                    status: "Appointment Booked / Confirmed"
+                  },
+                  {
+                    id: "harrier_brake_pad",
+                    title: "Tata Harrier Dark • Brake Pad Price Objection",
+                    meta: "Customer: Amitabh Verma • Reg: DL04CAZ4841 • Lang: Hindi",
+                    status: "Follow Up Required / Price High"
+                  },
+                  {
+                    id: "safari_reschedule",
+                    title: "Tata Safari Gold • Service Reschedule Request",
+                    meta: "Customer: Amit Sharma • Reg: UP16CS7403 • Lang: Hinglish",
+                    status: "Appointment Booked / Rescheduled"
+                  }
+                ].map((s) => (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      setSelectedSample(s.id);
+                      setCustomTranscript("");
+                    }}
+                    className={`p-3 rounded border cursor-pointer transition ${
+                      selectedSample === s.id && !customTranscript
+                        ? "bg-blue-950/80 border-blue-500 text-white shadow-xs"
+                        : "bg-[#060e18] border-gray-800 text-gray-300 hover:border-gray-700"
+                    }`}
+                  >
+                    <div className="font-bold text-xs">{s.title}</div>
+                    <div className="text-[10px] text-gray-400 mt-1">{s.meta}</div>
+                    <div className="text-[10px] text-cyan-400 font-semibold mt-1">Expected: {s.status}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-gray-800">
+                <label className="block text-xs font-semibold text-gray-300 mb-1.5">Or Paste Custom Customer Conversation Transcript:</label>
+                <textarea
+                  value={customTranscript}
+                  onChange={(e) => setCustomTranscript(e.target.value)}
+                  placeholder="Paste Hindi, Hinglish, or English conversation text between telecaller and vehicle customer..."
+                  className="w-full h-24 bg-[#060e18] border border-gray-800 rounded p-2.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono"
+                />
+              </div>
+
+              <button
+                onClick={() => runAiAnalysis(customTranscript ? undefined : selectedSample)}
+                disabled={isAnalyzing}
+                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded text-xs transition shadow-md flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {isAnalyzing ? (
+                  <span>Analyzing with AI Intelligence Engine...</span>
+                ) : (
+                  <span>⚡ Run AI Telecaller CRM Analysis</span>
+                )}
+              </button>
+            </div>
+
+            {/* Right Column: AI Analysis JSON & Structured Cards */}
+            <div className="col-span-7 bg-[#0b1726] border border-gray-800 rounded-lg p-5 flex flex-col space-y-4 overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
+                <h3 className="font-bold text-sm text-emerald-400 flex items-center space-x-2">
+                  <span>📊 Structured CRM Output (Raw JSON Schema)</span>
+                </h3>
+                {crmResult && (
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(JSON.stringify(crmResult, null, 2));
+                      setCopySuccess(true);
+                      setTimeout(() => setCopySuccess(false), 2000);
+                    }}
+                    className="text-xs text-gray-400 hover:text-white bg-slate-800 px-2 py-1 rounded border border-gray-700"
+                  >
+                    {copySuccess ? "✓ Copied JSON" : "📋 Copy Raw JSON"}
+                  </button>
+                )}
+              </div>
+
+              {crmResult ? (
+                <div className="space-y-4">
+                  {/* Category Status & Sub-Status Badges */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#060e18] border border-gray-800 p-3 rounded">
+                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Recommended Disposition Status</div>
+                      <div className="text-sm font-black text-emerald-400 mt-1 flex items-center space-x-2">
+                        <span>●</span>
+                        <span>{crmResult.suggested_status}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#060e18] border border-gray-800 p-3 rounded">
+                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Recommended Sub-Status</div>
+                      <div className="text-sm font-black text-cyan-400 mt-1 flex items-center space-x-2">
+                        <span>●</span>
+                        <span>{crmResult.suggested_sub_status}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voice of Customer (VOC) */}
+                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
+                    <div className="text-[10px] text-cyan-300 font-bold uppercase tracking-wider mb-1">
+                      Voice of Customer (VOC) Highlights
+                    </div>
+                    <p className="text-xs text-gray-200 leading-relaxed">
+                      {crmResult.voice_of_customer_voc}
+                    </p>
+                  </div>
+
+                  {/* CRM Remarks */}
+                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
+                    <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">
+                      Actionable CRM Remarks
+                    </div>
+                    <p className="text-xs text-gray-200 leading-relaxed font-mono">
+                      {crmResult.crm_remarks}
+                    </p>
+                  </div>
+
+                  {/* English-translated verbatim transcript */}
+                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
+                      English-Translated Verbatim Transcript
+                    </div>
+                    <div className="text-xs text-gray-300 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto font-mono bg-black/40 p-2.5 rounded border border-gray-800">
+                      {crmResult.english_transcript}
+                    </div>
+                  </div>
+
+                  {/* Raw JSON View */}
+                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
+                      Raw JSON Response
+                    </div>
+                    <pre className="text-[11px] text-emerald-300 font-mono overflow-x-auto bg-black/60 p-2.5 rounded border border-gray-800">
+                      {JSON.stringify(crmResult, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-500">
+                  <span className="text-3xl mb-2">🎙️</span>
+                  <div className="font-semibold text-gray-300 text-sm">No Call Analyzed Yet</div>
+                  <div className="text-xs text-gray-500 mt-1 max-w-sm">
+                    Select a recording from the left panel and click &quot;Run AI Telecaller CRM Analysis&quot; to inspect verbatim English translations, Voice of Customer (VOC), and disposition status.
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       )}
