@@ -89,8 +89,8 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "UP81DJ6809",
     model: "Safari",
     fullModelName: "Tata Safari Dark Edition",
-    customer: "JOE DOE",
-    serviceAdvisor: "Bhawani Shankar",
+    customer: "Rajesh K. Verma",
+    serviceAdvisor: "Rohit Malviya",
     workType: "Running Repair & 30k PMS",
     promiseTime: "2026/12/24 04:30 PM",
     stageIndex: 2,
@@ -111,8 +111,8 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "DL14CH2428",
     model: "Harrier",
     fullModelName: "Tata Harrier Fearless Red",
-    customer: "JOE DOE",
-    serviceAdvisor: "Bhawani Shankar",
+    customer: "Sunita Aggarwal",
+    serviceAdvisor: "Saurabh Joshi",
     workType: "Brake Pad & AC Overhaul",
     promiseTime: "2026/12/24 05:15 PM",
     stageIndex: 4,
@@ -134,8 +134,8 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "UP16CS7403",
     model: "Nexon",
     fullModelName: "Tata Nexon.ev Empowered",
-    customer: "JOE DOE",
-    serviceAdvisor: "Bhawani Shankar",
+    customer: "Anand Deshmukh",
+    serviceAdvisor: "Imran Khan",
     workType: "HV Battery Diagnostics",
     promiseTime: "2026/12/24 03:45 PM",
     stageIndex: 3,
@@ -156,7 +156,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "UP14EJ9609",
     model: "Curvv",
     fullModelName: "Tata Curvv EV Coupe",
-    customer: "ROHAN VERMA",
+    customer: "Rohan Verma",
     serviceAdvisor: "Hemendra Chundawat",
     workType: "1st Free Service & Coating",
     promiseTime: "2026/12/24 06:00 PM",
@@ -178,8 +178,8 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "DL5CS0664",
     model: "Punch",
     fullModelName: "Tata Punch.ev Accomplished",
-    customer: "PRIYA NAIR",
-    serviceAdvisor: "Imran Khan",
+    customer: "Vikramaditya Roy",
+    serviceAdvisor: "Praveen Nair",
     workType: "Routine Checkup & Detailing",
     promiseTime: "2026/12/24 02:00 PM",
     stageIndex: 5,
@@ -200,8 +200,8 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     regNo: "MH01EK9921",
     model: "Altroz",
     fullModelName: "Tata Altroz Racer Edition",
-    customer: "SURESH NAMBIAR",
-    serviceAdvisor: "Bhawani Shankar",
+    customer: "Farhan Akhtar",
+    serviceAdvisor: "Naveen Kaushik",
     workType: "Wheel Alignment & Engine Tune",
     promiseTime: "2026/12/24 05:45 PM",
     stageIndex: 0,
@@ -215,6 +215,54 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     vehCategory: "Premium Hatchback",
     gateInDate: "18 Jul '23, 11:15 AM",
     promisedDeliveryDate: "18 Jul '23, 05:45 PM"
+  }
+];
+
+// Dedicated Next in Queue Vehicles with specific customer & model assignments
+export const QUEUE_VEHICLES: Vehicle[] = [
+  {
+    id: "Q1",
+    numberTag: 1,
+    regNo: "HR26DK5510",
+    model: "Safari",
+    fullModelName: "Tata Safari Accomplished Plus",
+    customer: "Deepak Chopra",
+    serviceAdvisor: "Hemendra Chundawat",
+    workType: "Periodic Maintenance Service 45k",
+    promiseTime: "2026/12/24 06:30 PM",
+    stageIndex: 0,
+    wmStageIndex: 1,
+    flightStatus: "ON TIME",
+    isWalkIn: false,
+    odometer: "44,200 KM",
+    jobCard: "JC-TML-DEL-2324-004901",
+    badgeType: "red",
+    badgeText: "JC-TML-DEL-2324-004901",
+    vehCategory: "Premium SUV",
+    gateInDate: "18 Jul '23, 11:30 AM",
+    promisedDeliveryDate: "18 Jul '23, 06:30 PM"
+  },
+  {
+    id: "Q2",
+    numberTag: 2,
+    regNo: "DL03CB8821",
+    model: "Harrier",
+    fullModelName: "Tata Harrier Adventure Plus",
+    customer: "Meenakshi Iyer",
+    serviceAdvisor: "Saurabh Joshi",
+    workType: "Suspension Noise & Wheel Balance",
+    promiseTime: "2026/12/24 07:00 PM",
+    stageIndex: 0,
+    wmStageIndex: 0,
+    flightStatus: "ON TIME",
+    isWalkIn: false,
+    odometer: "22,600 KM",
+    jobCard: "JC-TML-DEL-2324-004933",
+    badgeType: "red",
+    badgeText: "JC-TML-DEL-2324-004933",
+    vehCategory: "Mid-Size SUV",
+    gateInDate: "18 Jul '23, 11:45 AM",
+    promisedDeliveryDate: "18 Jul '23, 07:00 PM"
   }
 ];
 
@@ -257,32 +305,17 @@ const WM_FILTER_BUTTONS = [
   "GATE OUT"
 ];
 
-interface CrmAnalysisResult {
-  english_transcript: string;
-  voice_of_customer_voc: string;
-  crm_remarks: string;
-  suggested_status: string;
-  suggested_sub_status: string;
-}
-
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{ role: "Receptionist" | "WorksManager"; name: string; username: string } | null>(null);
   const [usernameInput, setUsernameInput] = useState("NP7_1007960");
   const [passwordInput, setPasswordInput] = useState("••••••••••");
 
-  const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status" | "ai-crm">("appointments");
+  const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status">("appointments");
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
   const [countdown, setCountdown] = useState<number>(20);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
-
-  // AI CRM Telecaller State
-  const [selectedSample, setSelectedSample] = useState<string>("nexon_ev_pms");
-  const [customTranscript, setCustomTranscript] = useState<string>("");
-  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [crmResult, setCrmResult] = useState<CrmAnalysisResult | null>(null);
-  const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -367,40 +400,6 @@ export default function App() {
       }
       return v;
     }));
-  };
-
-  // Run AI CRM Analysis
-  const runAiAnalysis = async (sampleKey?: string) => {
-    setIsAnalyzing(true);
-    try {
-      const payload: Record<string, string> = {};
-      if (sampleKey) {
-        payload.sampleKey = sampleKey;
-      } else if (customTranscript) {
-        payload.transcriptText = customTranscript;
-      } else {
-        payload.sampleKey = selectedSample;
-      }
-
-      const res = await fetch("/api/analyze-call", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      setCrmResult(data);
-    } catch {
-      // In-app fallback if server request fails
-      setCrmResult({
-        english_transcript: "Telecaller: Good morning, this is Bhawani Shankar from Pasco Tata Motors regarding your Tata Nexon EV (MH01EK9921). Your 20,000 km PMS is due.\nCustomer: Yes, I noticed a slight squeak when applying brakes at low speeds, and the AC filter needs replacement.\nTelecaller: We will inspect brake pads and replace the AC filter. Can I book for tomorrow 9:30 AM?\nCustomer: Yes, tomorrow 9:30 AM is confirmed.",
-        voice_of_customer_voc: "Customer confirmed appointment for tomorrow 9:30 AM for Nexon EV 20k PMS with brake squeak inspection and cabin AC filter change.",
-        crm_remarks: "Nexon EV (MH01EK9921) confirmed for 20k PMS + HV Check. Special customer requests: check brake squeak and AC filter replacement.",
-        suggested_status: "Appointment Booked",
-        suggested_sub_status: "Confirmed"
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
   };
 
   // Indian Number Plate badge with authentic IND blue strip
@@ -762,14 +761,6 @@ export default function App() {
           >
             3. Vehicle Status
           </button>
-          <button
-            onClick={() => setReceptionTab("ai-crm")}
-            className={`px-3 py-1 rounded font-semibold transition flex items-center space-x-1 ${
-              receptionTab === "ai-crm" ? "bg-purple-600 text-white shadow-xs" : "text-purple-300 hover:text-white"
-            }`}
-          >
-            <span>🎙️ AI Telecaller CRM (VOC)</span>
-          </button>
         </nav>
 
         <div className="flex items-center space-x-3">
@@ -868,7 +859,7 @@ export default function App() {
                 Next In Queue
               </div>
               <div className="space-y-3">
-                {vehicles.slice(0, 2).map((item, idx) => (
+                {QUEUE_VEHICLES.map((item, idx) => (
                   <div
                     key={`queue-${item.id}`}
                     className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg relative"
@@ -1033,182 +1024,6 @@ export default function App() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </main>
-      )}
-
-      {/* RECEPTIONIST SCREEN 4: AI TELECALLER CRM (VOC Engine) */}
-      {receptionTab === "ai-crm" && (
-        <main className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
-            <div>
-              <span className="text-xl font-bold tracking-tight text-white uppercase">AI Telecaller VOC Engine</span>
-              <p className="text-xs text-gray-400 mt-0.5">Tata Motors Service Transformation CRM • Hindi, English &amp; Hinglish Audio Intelligence</p>
-            </div>
-            <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
-          </div>
-
-          <div className="grid grid-cols-12 gap-6 flex-1">
-            {/* Left Column: Recording / Call Selection */}
-            <div className="col-span-5 bg-[#0b1726] border border-gray-800 rounded-lg p-5 flex flex-col space-y-4">
-              <h3 className="font-bold text-sm text-cyan-400 flex items-center space-x-2">
-                <span>📞 Select Telecaller Call Recording</span>
-              </h3>
-
-              <div className="space-y-2.5">
-                {[
-                  {
-                    id: "nexon_ev_pms",
-                    title: "Tata Nexon.ev • 20k PMS & Brake Squeak Concern",
-                    meta: "Customer: Vineeth Hari • Reg: MH01EK9921 • Lang: Hinglish",
-                    status: "Appointment Booked / Confirmed"
-                  },
-                  {
-                    id: "harrier_brake_pad",
-                    title: "Tata Harrier Dark • Brake Pad Price Objection",
-                    meta: "Customer: Amitabh Verma • Reg: DL04CAZ4841 • Lang: Hindi",
-                    status: "Follow Up Required / Price High"
-                  },
-                  {
-                    id: "safari_reschedule",
-                    title: "Tata Safari Gold • Service Reschedule Request",
-                    meta: "Customer: Amit Sharma • Reg: UP16CS7403 • Lang: Hinglish",
-                    status: "Appointment Booked / Rescheduled"
-                  }
-                ].map((s) => (
-                  <div
-                    key={s.id}
-                    onClick={() => {
-                      setSelectedSample(s.id);
-                      setCustomTranscript("");
-                    }}
-                    className={`p-3 rounded border cursor-pointer transition ${
-                      selectedSample === s.id && !customTranscript
-                        ? "bg-blue-950/80 border-blue-500 text-white shadow-xs"
-                        : "bg-[#060e18] border-gray-800 text-gray-300 hover:border-gray-700"
-                    }`}
-                  >
-                    <div className="font-bold text-xs">{s.title}</div>
-                    <div className="text-[10px] text-gray-400 mt-1">{s.meta}</div>
-                    <div className="text-[10px] text-cyan-400 font-semibold mt-1">Expected: {s.status}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-2 border-t border-gray-800">
-                <label className="block text-xs font-semibold text-gray-300 mb-1.5">Or Paste Custom Customer Conversation Transcript:</label>
-                <textarea
-                  value={customTranscript}
-                  onChange={(e) => setCustomTranscript(e.target.value)}
-                  placeholder="Paste Hindi, Hinglish, or English conversation text between telecaller and vehicle customer..."
-                  className="w-full h-24 bg-[#060e18] border border-gray-800 rounded p-2.5 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500 font-mono"
-                />
-              </div>
-
-              <button
-                onClick={() => runAiAnalysis(customTranscript ? undefined : selectedSample)}
-                disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold py-2.5 rounded text-xs transition shadow-md flex items-center justify-center space-x-2 disabled:opacity-50"
-              >
-                {isAnalyzing ? (
-                  <span>Analyzing with AI Intelligence Engine...</span>
-                ) : (
-                  <span>⚡ Run AI Telecaller CRM Analysis</span>
-                )}
-              </button>
-            </div>
-
-            {/* Right Column: AI Analysis JSON & Structured Cards */}
-            <div className="col-span-7 bg-[#0b1726] border border-gray-800 rounded-lg p-5 flex flex-col space-y-4 overflow-y-auto">
-              <div className="flex items-center justify-between border-b border-gray-800 pb-2">
-                <h3 className="font-bold text-sm text-emerald-400 flex items-center space-x-2">
-                  <span>📊 Structured CRM Output (Raw JSON Schema)</span>
-                </h3>
-                {crmResult && (
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(JSON.stringify(crmResult, null, 2));
-                      setCopySuccess(true);
-                      setTimeout(() => setCopySuccess(false), 2000);
-                    }}
-                    className="text-xs text-gray-400 hover:text-white bg-slate-800 px-2 py-1 rounded border border-gray-700"
-                  >
-                    {copySuccess ? "✓ Copied JSON" : "📋 Copy Raw JSON"}
-                  </button>
-                )}
-              </div>
-
-              {crmResult ? (
-                <div className="space-y-4">
-                  {/* Category Status & Sub-Status Badges */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#060e18] border border-gray-800 p-3 rounded">
-                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Recommended Disposition Status</div>
-                      <div className="text-sm font-black text-emerald-400 mt-1 flex items-center space-x-2">
-                        <span>●</span>
-                        <span>{crmResult.suggested_status}</span>
-                      </div>
-                    </div>
-
-                    <div className="bg-[#060e18] border border-gray-800 p-3 rounded">
-                      <div className="text-[10px] text-gray-400 uppercase font-semibold">Recommended Sub-Status</div>
-                      <div className="text-sm font-black text-cyan-400 mt-1 flex items-center space-x-2">
-                        <span>●</span>
-                        <span>{crmResult.suggested_sub_status}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Voice of Customer (VOC) */}
-                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
-                    <div className="text-[10px] text-cyan-300 font-bold uppercase tracking-wider mb-1">
-                      Voice of Customer (VOC) Highlights
-                    </div>
-                    <p className="text-xs text-gray-200 leading-relaxed">
-                      {crmResult.voice_of_customer_voc}
-                    </p>
-                  </div>
-
-                  {/* CRM Remarks */}
-                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
-                    <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider mb-1">
-                      Actionable CRM Remarks
-                    </div>
-                    <p className="text-xs text-gray-200 leading-relaxed font-mono">
-                      {crmResult.crm_remarks}
-                    </p>
-                  </div>
-
-                  {/* English-translated verbatim transcript */}
-                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      English-Translated Verbatim Transcript
-                    </div>
-                    <div className="text-xs text-gray-300 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto font-mono bg-black/40 p-2.5 rounded border border-gray-800">
-                      {crmResult.english_transcript}
-                    </div>
-                  </div>
-
-                  {/* Raw JSON View */}
-                  <div className="bg-[#060e18] border border-gray-800 p-3.5 rounded">
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">
-                      Raw JSON Response
-                    </div>
-                    <pre className="text-[11px] text-emerald-300 font-mono overflow-x-auto bg-black/60 p-2.5 rounded border border-gray-800">
-                      {JSON.stringify(crmResult, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-500">
-                  <span className="text-3xl mb-2">🎙️</span>
-                  <div className="font-semibold text-gray-300 text-sm">No Call Analyzed Yet</div>
-                  <div className="text-xs text-gray-500 mt-1 max-w-sm">
-                    Select a recording from the left panel and click &quot;Run AI Telecaller CRM Analysis&quot; to inspect verbatim English translations, Voice of Customer (VOC), and disposition status.
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </main>
       )}
