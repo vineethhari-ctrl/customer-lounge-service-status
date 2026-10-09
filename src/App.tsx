@@ -91,7 +91,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Safari Dark Edition",
     customer: "Rajesh K. Verma",
     serviceAdvisor: "Rohit Malviya",
-    workType: "Running Repair & 30k PMS",
+    workType: "Running Repairs",
     promiseTime: "2026/12/24 04:30 PM",
     stageIndex: 2,
     wmStageIndex: 4,
@@ -113,7 +113,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Harrier Fearless Red",
     customer: "Sunita Aggarwal",
     serviceAdvisor: "Saurabh Joshi",
-    workType: "Brake Pad & AC Overhaul",
+    workType: "Paid Service",
     promiseTime: "2026/12/24 05:15 PM",
     stageIndex: 4,
     wmStageIndex: 7,
@@ -136,7 +136,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Nexon.ev Empowered",
     customer: "Anand Deshmukh",
     serviceAdvisor: "Imran Khan",
-    workType: "HV Battery Diagnostics",
+    workType: "Second Free Service",
     promiseTime: "2026/12/24 03:45 PM",
     stageIndex: 3,
     wmStageIndex: 5,
@@ -158,7 +158,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Curvv EV Coupe",
     customer: "Rohan Verma",
     serviceAdvisor: "Hemendra Chundawat",
-    workType: "1st Free Service & Coating",
+    workType: "First Free Service",
     promiseTime: "2026/12/24 06:00 PM",
     stageIndex: 1,
     wmStageIndex: 2,
@@ -180,7 +180,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Punch.ev Accomplished",
     customer: "Vikramaditya Roy",
     serviceAdvisor: "Praveen Nair",
-    workType: "Routine Checkup & Detailing",
+    workType: "First Free Service",
     promiseTime: "2026/12/24 02:00 PM",
     stageIndex: 5,
     wmStageIndex: 8,
@@ -202,7 +202,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Altroz Racer Edition",
     customer: "Farhan Akhtar",
     serviceAdvisor: "Naveen Kaushik",
-    workType: "Wheel Alignment & Engine Tune",
+    workType: "Running Repairs",
     promiseTime: "2026/12/24 05:45 PM",
     stageIndex: 0,
     wmStageIndex: 0,
@@ -228,7 +228,7 @@ export const QUEUE_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Safari Accomplished Plus",
     customer: "Deepak Chopra",
     serviceAdvisor: "Hemendra Chundawat",
-    workType: "Periodic Maintenance Service 45k",
+    workType: "Paid Service",
     promiseTime: "2026/12/24 06:30 PM",
     stageIndex: 0,
     wmStageIndex: 1,
@@ -250,7 +250,7 @@ export const QUEUE_VEHICLES: Vehicle[] = [
     fullModelName: "Tata Harrier Adventure Plus",
     customer: "Meenakshi Iyer",
     serviceAdvisor: "Saurabh Joshi",
-    workType: "Suspension Noise & Wheel Balance",
+    workType: "Running Repairs",
     promiseTime: "2026/12/24 07:00 PM",
     stageIndex: 0,
     wmStageIndex: 0,
@@ -311,6 +311,8 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState("••••••••••");
 
   const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status">("appointments");
+  const [rotationCountdown, setRotationCountdown] = useState<number>(15);
+  const [isRotating, setIsRotating] = useState<boolean>(true);
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
   const [countdown, setCountdown] = useState<number>(20);
@@ -321,6 +323,28 @@ export default function App() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // 15-Second Auto-Rotation between 1. Appointments and 2. Walk-In Customers for Reception Login
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== "Receptionist") return;
+
+    const rotationInterval = setInterval(() => {
+      if (!isRotating) return;
+
+      // Only auto-rotate when currently displaying Appointments or Walk-In Customers
+      if (receptionTab === "status") return;
+
+      setRotationCountdown((prev) => {
+        if (prev <= 1) {
+          setReceptionTab((curr) => (curr === "appointments" ? "walkin" : "appointments"));
+          return 15;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(rotationInterval);
+  }, [currentUser, isRotating, receptionTab]);
 
   const playAirportChime = () => {
     if (!soundEnabled) return;
@@ -590,71 +614,72 @@ export default function App() {
           ))}
         </div>
 
-        {/* Vehicles Board with Realistic Tata Car Images */}
-        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+        {/* Vehicles Board with Realistic Tata Car Images - Compact Single-View Layout */}
+        <div className="flex-1 p-3 space-y-1.5 overflow-y-auto">
           {vehicles.map((v) => (
             <div
               key={v.id}
-              className="bg-white border border-gray-300 rounded shadow-xs p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs"
+              className="bg-white border border-gray-300 rounded shadow-2xs px-3 py-1 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 text-xs hover:border-blue-400 transition"
             >
               {/* PV Real Image Box & Tag Badge */}
-              <div className="flex flex-col items-center justify-center min-w-[160px]">
-                <div className="w-36 h-20 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-1.5 mb-1.5 shadow-xs overflow-hidden">
-                  {getTataCarImage(v.model)}
+              <div className="flex flex-col items-center justify-center min-w-[115px]">
+                <div className="w-22 h-10 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-0.5 mb-0.5 shadow-2xs overflow-hidden">
+                  {getTataCarImage(v.model, "w-full h-full object-contain filter drop-shadow-[0_3px_5px_rgba(0,0,0,0.5)]")}
                 </div>
                 {v.badgeType === "red" && (
-                  <span className="bg-[#D32F2F] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs truncate max-w-[150px]">
+                  <span className="bg-[#D32F2F] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[120px] leading-tight">
                     {v.badgeText}
                   </span>
                 )}
                 {v.badgeType === "blue" && (
-                  <span className="bg-[#1976D2] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs truncate max-w-[150px]">
+                  <span className="bg-[#1976D2] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[120px] leading-tight">
                     {v.badgeText}
                   </span>
                 )}
                 {v.badgeType === "gray" && (
-                  <span className="bg-white border border-gray-300 text-gray-500 text-[10px] font-semibold px-2 py-0.5 rounded shadow-xs">
+                  <span className="bg-white border border-gray-300 text-gray-500 text-[8px] font-semibold px-1.5 py-0.2 rounded-xs shadow-2xs leading-tight">
                     {v.badgeText}
                   </span>
                 )}
               </div>
 
-              {/* Meta Specifications */}
-              <div className="grid grid-cols-[70px_1fr] gap-y-0.5 text-[11px] min-w-[190px]">
-                <span className="text-gray-500">Veh. No:</span>
-                <span className="font-extrabold text-gray-900 font-mono">{v.regNo}</span>
+              {/* Meta Specifications Column 1 */}
+              <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight min-w-[155px]">
+                <span className="text-gray-500 text-[9px]">Veh. No:</span>
+                <span className="font-extrabold text-gray-900 font-mono text-[10.5px]">{v.regNo}</span>
 
-                <span className="text-gray-500">SA Name:</span>
-                <span className="font-semibold text-gray-800">{v.serviceAdvisor}</span>
+                <span className="text-gray-500 text-[9px]">SA Name:</span>
+                <span className="font-semibold text-gray-800 text-[10px] truncate">{v.serviceAdvisor}</span>
 
-                <span className="text-gray-500">Odometer:</span>
-                <span className="text-gray-800">{v.odometer}</span>
+                <span className="text-gray-500 text-[9px]">Odometer:</span>
+                <span className="text-gray-800 text-[10px]">{v.odometer}</span>
 
-                <span className="text-gray-500">ST:</span>
-                <span className="text-gray-800">{v.vehCategory || "Warranty"}</span>
+                <span className="text-gray-500 text-[9px]">ST:</span>
+                <span className="font-bold text-gray-900 text-[10px]">{v.workType}</span>
               </div>
 
-              <div className="grid grid-cols-[70px_1fr] gap-y-0.5 text-[11px] min-w-[210px] border-l border-gray-200 pl-4">
-                <div className="col-span-2 text-gray-500 truncate">
-                  <b className="text-gray-900 block">{v.fullModelName}</b>
+              {/* Meta Specifications Column 2 */}
+              <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight min-w-[175px] border-l border-gray-200 pl-2.5">
+                <div className="col-span-2 text-gray-900 font-bold text-[10.5px] truncate pb-0.5">
+                  {v.fullModelName}
                 </div>
 
-                <span className="text-gray-500">TL Name:</span>
-                <span className="font-semibold text-gray-800">PARVEEN VARI</span>
+                <span className="text-gray-500 text-[9px]">TL Name:</span>
+                <span className="font-semibold text-gray-800 text-[10px]">PARVEEN VARI</span>
 
-                <span className="text-gray-500">Veh. Type:</span>
-                <span className="font-bold text-blue-700">{v.vehCategory?.includes("EV") ? "EV PASSENGER" : "PV PASSENGER"}</span>
+                <span className="text-gray-500 text-[9px]">Veh. Type:</span>
+                <span className="font-bold text-blue-700 text-[10px]">{v.vehCategory?.includes("EV") ? "EV PASSENGER" : "PV PASSENGER"}</span>
 
-                <span className="text-gray-500">Veh. Category:</span>
-                <span className="text-gray-800">{v.vehCategory}</span>
+                <span className="text-gray-500 text-[9px]">Veh. Category:</span>
+                <span className="text-gray-800 text-[10px]">{v.vehCategory}</span>
               </div>
 
               {/* Works Manager Stepper (Fenced In/Out strictly removed) */}
-              <div className="flex-1 flex flex-col justify-center px-4">
+              <div className="flex-1 flex flex-col justify-center px-1">
                 <div className="relative flex items-center justify-between">
-                  <div className="absolute top-2.5 left-2 right-2 h-0.5 bg-gray-200 -z-0"></div>
+                  <div className="absolute top-2 left-2 right-2 h-0.5 bg-gray-200 -z-0"></div>
                   <div
-                    className="absolute top-2.5 left-2 h-0.5 bg-emerald-500 -z-0 transition-all duration-300"
+                    className="absolute top-2 left-2 h-0.5 bg-emerald-500 -z-0 transition-all duration-300"
                     style={{ width: `${(v.wmStageIndex / (WM_PIPELINE_STAGES.length - 1)) * 96}%` }}
                   ></div>
 
@@ -665,17 +690,17 @@ export default function App() {
                     return (
                       <div
                         key={label}
-                        className="flex flex-col items-center z-10 cursor-pointer"
+                        className="flex flex-col items-center z-10 cursor-pointer group"
                         onClick={() => advanceVehicleMilestone(v.id)}
                         title={`Click to set stage to ${label}`}
                       >
                         {label === "WIP" && isCurrent ? (
-                          <div className="w-5 h-5 rotate-45 bg-[#4CAF50] border-2 border-white shadow-xs flex items-center justify-center">
-                            <span className="-rotate-45 text-[8px] font-bold text-white">●</span>
+                          <div className="w-3.5 h-3.5 rotate-45 bg-[#4CAF50] border border-white shadow-2xs flex items-center justify-center">
+                            <span className="-rotate-45 text-[6px] font-bold text-white">●</span>
                           </div>
                         ) : (
                           <div
-                            className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ${
+                            className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-bold transition-all ${
                               isCompleted || isCurrent
                                 ? "bg-[#4CAF50] text-white"
                                 : "bg-gray-200 text-gray-400"
@@ -686,7 +711,7 @@ export default function App() {
                         )}
 
                         <span
-                          className={`text-[9px] mt-1 tracking-tight text-center max-w-[48px] leading-tight ${
+                          className={`text-[8px] mt-0.5 tracking-tight text-center max-w-[42px] leading-none ${
                             isCurrent ? "font-bold text-emerald-800" : "text-gray-500"
                           }`}
                         >
@@ -697,17 +722,17 @@ export default function App() {
                   })}
                 </div>
 
-                {/* Gate In & Promised Delivery Timestamps (Fenced In/Out removed) */}
-                <div className="flex justify-between items-center text-[10px] text-gray-500 mt-2.5 pt-1.5 border-t border-gray-100">
+                {/* Gate In & Promised Delivery Timestamps */}
+                <div className="flex justify-between items-center text-[9px] text-gray-500 mt-1 pt-0.5 border-t border-gray-100">
                   <div>
-                    GATE IN: <b className="text-gray-800">{v.gateInDate || "18 Jul '23, 10:00 AM"}</b>
+                    GATE IN: <b className="text-gray-800 font-mono">{v.gateInDate || "18 Jul '23, 10:00 AM"}</b>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     {renderFlightBadge(v.flightStatus, v.delayMinutes)}
-                    <span>PROMISED DELIVERY: <b className="text-gray-800">{v.promisedDeliveryDate || v.promiseTime}</b></span>
+                    <span>PROMISED DELIVERY: <b className="text-gray-800 font-mono">{v.promisedDeliveryDate || v.promiseTime}</b></span>
                     <button
                       onClick={() => advanceVehicleMilestone(v.id)}
-                      className="bg-[#002244] hover:bg-[#001730] text-white text-[10px] px-2.5 py-0.5 rounded font-semibold transition shadow-xs"
+                      className="bg-[#002244] hover:bg-[#001730] text-white text-[9px] px-2 py-0.5 rounded font-semibold transition shadow-2xs"
                     >
                       Advance ➔
                     </button>
@@ -736,9 +761,12 @@ export default function App() {
           </span>
         </div>
 
-        <nav className="flex space-x-1 bg-black/40 p-1 rounded border border-gray-800">
+        <nav className="flex items-center space-x-1.5 bg-black/40 p-1 rounded border border-gray-800">
           <button
-            onClick={() => setReceptionTab("appointments")}
+            onClick={() => {
+              setReceptionTab("appointments");
+              setRotationCountdown(15);
+            }}
             className={`px-3 py-1 rounded font-semibold transition ${
               receptionTab === "appointments" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
@@ -746,7 +774,10 @@ export default function App() {
             1. Appointments
           </button>
           <button
-            onClick={() => setReceptionTab("walkin")}
+            onClick={() => {
+              setReceptionTab("walkin");
+              setRotationCountdown(15);
+            }}
             className={`px-3 py-1 rounded font-semibold transition ${
               receptionTab === "walkin" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
@@ -761,6 +792,22 @@ export default function App() {
           >
             3. Vehicle Status
           </button>
+
+          {receptionTab !== "status" && (
+            <div className="flex items-center space-x-1.5 bg-blue-950/80 border border-blue-600/60 px-2 py-0.5 rounded text-[11px] text-blue-200 ml-1 shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>
+                Auto-switch: <b className="text-white font-mono">{rotationCountdown}s</b>
+              </span>
+              <button
+                onClick={() => setIsRotating(!isRotating)}
+                className="text-[10px] text-cyan-300 hover:text-white underline ml-1"
+                title={isRotating ? "Pause auto-switch" : "Resume auto-switch"}
+              >
+                {isRotating ? "Pause" : "Resume"}
+              </button>
+            </div>
+          )}
         </nav>
 
         <div className="flex items-center space-x-3">
@@ -802,6 +849,10 @@ export default function App() {
             <div className="flex items-center space-x-3">
               <span className="text-xl font-bold tracking-tight text-white uppercase">Appointments</span>
               <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
+              <span className="text-[11px] text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>Auto-switching to Walk-In Customers in <b>{rotationCountdown}s</b></span>
+              </span>
             </div>
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
@@ -916,7 +967,14 @@ export default function App() {
       {receptionTab === "walkin" && (
         <main className="flex-1 flex flex-col p-6 overflow-y-auto">
           <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
-            <span className="text-xl font-bold tracking-tight text-white uppercase">Walk-In Customers</span>
+            <div className="flex items-center space-x-3">
+              <span className="text-xl font-bold tracking-tight text-white uppercase">Walk-In Customers</span>
+              <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
+              <span className="text-[11px] text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                <span>Auto-switching to Appointments in <b>{rotationCountdown}s</b></span>
+              </span>
+            </div>
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
