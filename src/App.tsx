@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // =========================================================================
 // REAL TATA MOTORS PASSENGER VEHICLES (PV) IMAGES MAPPING
@@ -276,7 +276,7 @@ const STATUS_STAGES = [
   { key: "ready", label: "Ready For Delivery" }
 ];
 
-// Works Manager Pipeline Stages (Fenced In and Fenced Out strictly removed)
+// Works Manager Milestone Pipeline Stages
 const WM_PIPELINE_STAGES = [
   "Gate In",
   "SR",
@@ -290,19 +290,48 @@ const WM_PIPELINE_STAGES = [
   "Gate Out"
 ];
 
-// Works Manager Milestone Filter Buttons (Counts strictly removed, Fenced In/Out removed)
-const WM_FILTER_BUTTONS = [
-  "All ▾",
-  "GATE IN",
-  "SR",
-  "JC",
-  "FLOOR IN",
-  "WIP",
-  "WASHING",
-  "FLOOR OUT",
-  "ROAD TEST",
-  "JC CLOSED",
-  "GATE OUT"
+interface GeneralFilterOption {
+  type: "all" | "workType" | "model" | "flightStatus";
+  value: string;
+  label: string;
+}
+
+const DROPDOWN_FILTER_GROUPS: { group: string; options: GeneralFilterOption[] }[] = [
+  {
+    group: "Overview",
+    options: [
+      { type: "all", value: "ALL", label: "All Vehicles" }
+    ]
+  },
+  {
+    group: "By Work Type",
+    options: [
+      { type: "workType", value: "First Free Service", label: "First Free Service" },
+      { type: "workType", value: "Second Free Service", label: "Second Free Service" },
+      { type: "workType", value: "Paid Service", label: "Paid Service" },
+      { type: "workType", value: "Running Repairs", label: "Running Repairs" }
+    ]
+  },
+  {
+    group: "By Vehicle Model",
+    options: [
+      { type: "model", value: "Safari", label: "Tata Safari" },
+      { type: "model", value: "Harrier", label: "Tata Harrier" },
+      { type: "model", value: "Nexon", label: "Tata Nexon / EV" },
+      { type: "model", value: "Curvv", label: "Tata Curvv EV" },
+      { type: "model", value: "Punch", label: "Tata Punch / EV" },
+      { type: "model", value: "Altroz", label: "Tata Altroz" }
+    ]
+  },
+  {
+    group: "By Delivery Status",
+    options: [
+      { type: "flightStatus", value: "READY FOR PICKUP", label: "Ready For Pickup" },
+      { type: "flightStatus", value: "ON TIME", label: "On Time" },
+      { type: "flightStatus", value: "DELAYED", label: "Delayed" },
+      { type: "flightStatus", value: "EXPEDITED", label: "Expedited" }
+    ]
+  }
 ];
 
 export default function App() {
@@ -314,6 +343,15 @@ export default function App() {
   const [rotationCountdown, setRotationCountdown] = useState<number>(15);
   const [isRotating, setIsRotating] = useState<boolean>(true);
 
+  const [selectedMilestoneFilter, setSelectedMilestoneFilter] = useState<string>("ALL");
+  const [generalFilter, setGeneralFilter] = useState<GeneralFilterOption>({
+    type: "all",
+    value: "ALL",
+    label: "All"
+  });
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
   const [countdown, setCountdown] = useState<number>(20);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
@@ -322,6 +360,17 @@ export default function App() {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // 15-Second Auto-Rotation between 1. Appointments and 2. Walk-In Customers for Reception Login
@@ -600,81 +649,203 @@ export default function App() {
           </div>
         </div>
 
-        {/* Milestone Metrics Ribbon (Counts removed, Fenced In/Out removed) */}
-        <div className="bg-[#E5E7EB] border-b border-gray-300 px-6 py-2 overflow-x-auto flex items-center space-x-1.5 text-[11px] font-semibold text-gray-700 whitespace-nowrap">
-          {WM_FILTER_BUTTONS.map((label, idx) => (
-            <span
-              key={label}
-              className={`border border-gray-300 px-2.5 py-1 rounded shadow-xs cursor-pointer transition ${
-                idx === 0 ? "bg-white text-gray-900 font-bold" : "bg-white hover:bg-gray-100 text-gray-700"
-              }`}
-            >
-              {label}
-            </span>
-          ))}
+        {/* Milestone Metrics Ribbon - Aligned directly over the actual milestone stepper */}
+        <div className="bg-[#E5E7EB] border-b border-gray-300 px-6 py-1.5 flex items-center gap-2.5 text-xs select-none">
+          {/* Left area matching vehicle info columns */}
+          <div className="w-[455px] shrink-0 flex items-center justify-between pr-2">
+            <div className="flex items-center space-x-2">
+              {/* Functional All Dropdown Menu */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className={`border px-3 py-1 rounded text-xs font-bold shadow-2xs transition cursor-pointer flex items-center space-x-1.5 ${
+                    generalFilter.type !== "all"
+                      ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                      : "bg-[#002244] hover:bg-[#001730] text-white border-[#002244]"
+                  }`}
+                >
+                  <span className="truncate max-w-[130px]">{generalFilter.label}</span>
+                  <span className={`text-[9px] transform transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}>
+                    ▾
+                  </span>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-gray-300 rounded shadow-2xl z-50 py-1 text-xs text-gray-800 max-h-80 overflow-y-auto">
+                    {DROPDOWN_FILTER_GROUPS.map((grp) => (
+                      <div key={grp.group} className="border-b border-gray-100 last:border-0 pb-1 mb-1 last:mb-0 last:pb-0">
+                        <div className="px-3 py-1 text-[9.5px] font-extrabold text-gray-500 uppercase tracking-wider bg-gray-50">
+                          {grp.group}
+                        </div>
+                        {grp.options.map((opt) => {
+                          const isSelected =
+                            generalFilter.type === opt.type && generalFilter.value === opt.value;
+                          return (
+                            <button
+                              key={`${opt.type}-${opt.value}`}
+                              type="button"
+                              onClick={() => {
+                                setGeneralFilter(opt);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition hover:bg-blue-50 ${
+                                isSelected ? "bg-blue-100 text-blue-900 font-bold" : "text-gray-700"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isSelected && <span className="text-blue-600 font-bold">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <span className="text-[11px] font-bold text-gray-700">
+                Milestone Pipeline
+              </span>
+            </div>
+
+            {(generalFilter.type !== "all" || selectedMilestoneFilter !== "ALL") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setGeneralFilter({ type: "all", value: "ALL", label: "All" });
+                  setSelectedMilestoneFilter("ALL");
+                }}
+                className="text-[10px] text-blue-700 hover:underline font-semibold cursor-pointer"
+              >
+                Clear Filter ✕
+              </button>
+            )}
+          </div>
+
+          {/* Right area matching the stepper line width and padding */}
+          <div className="flex-1 px-1 flex items-center justify-between">
+            {WM_PIPELINE_STAGES.map((label) => {
+              const isSelected = selectedMilestoneFilter === label;
+              return (
+                <div key={label} className="w-11 flex justify-center">
+                  <button
+                    onClick={() => setSelectedMilestoneFilter(isSelected ? "ALL" : label)}
+                    title={`Filter by ${label}`}
+                    className={`border px-1 py-0.5 rounded shadow-2xs font-extrabold text-[8.5px] uppercase transition cursor-pointer text-center w-full truncate ${
+                      isSelected
+                        ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                        : "bg-white hover:bg-blue-50 text-gray-800 border-gray-300"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Vehicles Board with Realistic Tata Car Images - Compact Single-View Layout */}
         <div className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-          {vehicles.map((v) => (
-            <div
-              key={v.id}
-              className="bg-white border border-gray-300 rounded shadow-2xs px-3 py-1 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 text-xs hover:border-blue-400 transition"
-            >
-              {/* PV Real Image Box & Tag Badge */}
-              <div className="flex flex-col items-center justify-center min-w-[115px]">
-                <div className="w-22 h-10 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-0.5 mb-0.5 shadow-2xs overflow-hidden">
-                  {getTataCarImage(v.model, "w-full h-full object-contain filter drop-shadow-[0_3px_5px_rgba(0,0,0,0.5)]")}
+          {(() => {
+            const list = vehicles.filter((v) => {
+              if (selectedMilestoneFilter !== "ALL") {
+                if (WM_PIPELINE_STAGES[v.wmStageIndex] !== selectedMilestoneFilter) {
+                  return false;
+                }
+              }
+              if (generalFilter.type === "workType") {
+                if (v.workType !== generalFilter.value) return false;
+              } else if (generalFilter.type === "model") {
+                if (v.model !== generalFilter.value) return false;
+              } else if (generalFilter.type === "flightStatus") {
+                if (v.flightStatus !== generalFilter.value) return false;
+              }
+              return true;
+            });
+
+            if (list.length === 0) {
+              return (
+                <div className="bg-white border border-dashed border-gray-300 rounded p-8 text-center text-gray-500 text-xs shadow-2xs">
+                  <p className="font-semibold text-gray-800 text-sm mb-1">No vehicles matching the selected filters.</p>
+                  <p className="text-gray-500 text-[11px] mb-3">Try choosing another milestone stage or resetting the dropdown filter.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGeneralFilter({ type: "all", value: "ALL", label: "All" });
+                      setSelectedMilestoneFilter("ALL");
+                    }}
+                    className="bg-[#002244] hover:bg-[#001730] text-white px-3 py-1 rounded text-xs font-semibold shadow-2xs cursor-pointer"
+                  >
+                    Reset to All Vehicles
+                  </button>
                 </div>
-                {v.badgeType === "red" && (
-                  <span className="bg-[#D32F2F] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[120px] leading-tight">
-                    {v.badgeText}
-                  </span>
-                )}
-                {v.badgeType === "blue" && (
-                  <span className="bg-[#1976D2] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[120px] leading-tight">
-                    {v.badgeText}
-                  </span>
-                )}
-                {v.badgeType === "gray" && (
-                  <span className="bg-white border border-gray-300 text-gray-500 text-[8px] font-semibold px-1.5 py-0.2 rounded-xs shadow-2xs leading-tight">
-                    {v.badgeText}
-                  </span>
-                )}
-              </div>
+              );
+            }
 
-              {/* Meta Specifications Column 1 */}
-              <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight min-w-[155px]">
-                <span className="text-gray-500 text-[9px]">Veh. No:</span>
-                <span className="font-extrabold text-gray-900 font-mono text-[10.5px]">{v.regNo}</span>
-
-                <span className="text-gray-500 text-[9px]">SA Name:</span>
-                <span className="font-semibold text-gray-800 text-[10px] truncate">{v.serviceAdvisor}</span>
-
-                <span className="text-gray-500 text-[9px]">Odometer:</span>
-                <span className="text-gray-800 text-[10px]">{v.odometer}</span>
-
-                <span className="text-gray-500 text-[9px]">ST:</span>
-                <span className="font-bold text-gray-900 text-[10px]">{v.workType}</span>
-              </div>
-
-              {/* Meta Specifications Column 2 */}
-              <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight min-w-[175px] border-l border-gray-200 pl-2.5">
-                <div className="col-span-2 text-gray-900 font-bold text-[10.5px] truncate pb-0.5">
-                  {v.fullModelName}
+            return list.map((v) => (
+              <div
+                key={v.id}
+                className="bg-white border border-gray-300 rounded shadow-2xs px-3 py-1 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 text-xs hover:border-blue-400 transition"
+              >
+              {/* Left Vehicle Details - width 455px matching header */}
+              <div className="flex items-center gap-2.5 w-[455px] shrink-0">
+                {/* PV Real Image Box & Tag Badge */}
+                <div className="flex flex-col items-center justify-center w-[115px] shrink-0">
+                  <div className="w-22 h-10 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-0.5 mb-0.5 shadow-2xs overflow-hidden">
+                    {getTataCarImage(v.model, "w-full h-full object-contain filter drop-shadow-[0_3px_5px_rgba(0,0,0,0.5)]")}
+                  </div>
+                  {v.badgeType === "red" && (
+                    <span className="bg-[#D32F2F] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[115px] leading-tight text-center">
+                      {v.badgeText}
+                    </span>
+                  )}
+                  {v.badgeType === "blue" && (
+                    <span className="bg-[#1976D2] text-white text-[8px] font-bold px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[115px] leading-tight text-center">
+                      {v.badgeText}
+                    </span>
+                  )}
+                  {v.badgeType === "gray" && (
+                    <span className="bg-white border border-gray-300 text-gray-500 text-[8px] font-semibold px-1.5 py-0.2 rounded-xs shadow-2xs leading-tight text-center">
+                      {v.badgeText}
+                    </span>
+                  )}
                 </div>
 
-                <span className="text-gray-500 text-[9px]">TL Name:</span>
-                <span className="font-semibold text-gray-800 text-[10px]">PARVEEN VARI</span>
+                {/* Meta Specifications Column 1 */}
+                <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight w-[155px] shrink-0">
+                  <span className="text-gray-500 text-[9px]">Veh. No:</span>
+                  <span className="font-extrabold text-gray-900 font-mono text-[10.5px]">{v.regNo}</span>
 
-                <span className="text-gray-500 text-[9px]">Veh. Type:</span>
-                <span className="font-bold text-blue-700 text-[10px]">{v.vehCategory?.includes("EV") ? "EV PASSENGER" : "PV PASSENGER"}</span>
+                  <span className="text-gray-500 text-[9px]">SA Name:</span>
+                  <span className="font-semibold text-gray-800 text-[10px] truncate">{v.serviceAdvisor}</span>
 
-                <span className="text-gray-500 text-[9px]">Veh. Category:</span>
-                <span className="text-gray-800 text-[10px]">{v.vehCategory}</span>
+                  <span className="text-gray-500 text-[9px]">Odometer:</span>
+                  <span className="text-gray-800 text-[10px]">{v.odometer}</span>
+
+                  <span className="text-gray-500 text-[9px]">ST:</span>
+                  <span className="font-bold text-gray-900 text-[10px]">{v.workType}</span>
+                </div>
+
+                {/* Meta Specifications Column 2 */}
+                <div className="grid grid-cols-[55px_1fr] gap-y-0.2 text-[10px] leading-tight w-[175px] shrink-0 border-l border-gray-200 pl-2.5">
+                  <div className="col-span-2 text-gray-900 font-bold text-[10.5px] truncate pb-0.5">
+                    {v.fullModelName}
+                  </div>
+
+                  <span className="text-gray-500 text-[9px]">TL Name:</span>
+                  <span className="font-semibold text-gray-800 text-[10px]">PARVEEN VARI</span>
+
+                  <span className="text-gray-500 text-[9px]">Veh. Type:</span>
+                  <span className="font-bold text-blue-700 text-[10px]">{v.vehCategory?.includes("EV") ? "EV PASSENGER" : "PV PASSENGER"}</span>
+
+                  <span className="text-gray-500 text-[9px]">Veh. Category:</span>
+                  <span className="text-gray-800 text-[10px]">{v.vehCategory}</span>
+                </div>
               </div>
 
-              {/* Works Manager Stepper (Fenced In/Out strictly removed) */}
+              {/* Right Stepper Section - flex-1 px-1 matching header */}
               <div className="flex-1 flex flex-col justify-center px-1">
                 <div className="relative flex items-center justify-between">
                   <div className="absolute top-2 left-2 right-2 h-0.5 bg-gray-200 -z-0"></div>
@@ -690,7 +861,7 @@ export default function App() {
                     return (
                       <div
                         key={label}
-                        className="flex flex-col items-center z-10 cursor-pointer group"
+                        className="w-11 flex flex-col items-center z-10 cursor-pointer group"
                         onClick={() => advanceVehicleMilestone(v.id)}
                         title={`Click to set stage to ${label}`}
                       >
@@ -740,7 +911,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ))}
+          ))})()}
         </div>
       </div>
     );
