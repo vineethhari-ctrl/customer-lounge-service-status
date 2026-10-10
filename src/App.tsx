@@ -336,7 +336,7 @@ const DROPDOWN_FILTER_GROUPS: { group: string; options: GeneralFilterOption[] }[
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{ role: "Receptionist" | "WorksManager"; name: string; username: string } | null>(null);
-  const [usernameInput, setUsernameInput] = useState("NP7_1007960");
+  const [usernameInput, setUsernameInput] = useState("NP7_3007960");
   const [passwordInput, setPasswordInput] = useState("••••••••••");
 
   const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status">("appointments");
@@ -349,9 +349,6 @@ export default function App() {
     value: "ALL",
     label: "All"
   });
-  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
   const [countdown, setCountdown] = useState<number>(20);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
@@ -360,17 +357,6 @@ export default function App() {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  // Click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // 15-Second Auto-Rotation between 1. Appointments and 2. Walk-In Customers for Reception Login
@@ -490,7 +476,7 @@ export default function App() {
 
   const renderFlightBadge = (status: Vehicle["flightStatus"], delay?: number) => {
     if (status === "READY FOR PICKUP") {
-      return <span className="bg-emerald-500 text-black px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">READY</span>;
+      return <span className="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">READY</span>;
     }
     if (status === "DELAYED") {
       return <span className="bg-amber-100 text-amber-800 border border-amber-400 px-2 py-0.5 rounded text-[10px] font-semibold">DELAYED (+{delay || 15}m)</span>;
@@ -556,7 +542,7 @@ export default function App() {
                   <span>📺 Customer Lounge &amp; FIDS Display</span>
                 </button>
                 <button
-                  onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_1007960" })}
+                  onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_3007960" })}
                   className="w-full bg-[#002244] hover:bg-[#001730] text-white py-2.5 rounded text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5"
                 >
                   <span>🔧 Works Manager Workshop Board</span>
@@ -565,7 +551,7 @@ export default function App() {
             </div>
           </div>
           <div className="text-xs text-slate-500 mt-6 font-mono text-center">
-            Tata Motors Passenger Vehicles (PV) • Pasco Motors Dealership (1007960)
+            Tata Motors Passenger Vehicles (PV) • Pasco Motors Dealership (3007960)
           </div>
         </div>
 
@@ -614,7 +600,7 @@ export default function App() {
             </button>
 
             <div className="text-right border-l border-blue-900 pl-4">
-              <div className="font-bold text-xs">TATA MOTORS AUTHORIZED SERVICE - 1007960</div>
+              <div className="font-bold text-xs">TATA MOTORS AUTHORIZED SERVICE - 3007960</div>
               <div className="text-[10px] text-blue-200 font-mono">DELHI PV WORKSHOP | 1-9FRGY0Z</div>
             </div>
 
@@ -640,7 +626,7 @@ export default function App() {
             <span className="font-bold text-blue-900 tracking-wider">TATA MOTORS</span>
             <span className="text-[11px] text-gray-400">Connecting Aspirations</span>
             <span className="text-gray-300">|</span>
-            <span className="font-semibold text-gray-700">TATA MOTORS PASSENGER VEHICLES WORKSHOP-1007960</span>
+            <span className="font-semibold text-gray-700">TATA MOTORS PASSENGER VEHICLES WORKSHOP-3007960</span>
             <span className="text-gray-400 text-[11px]">Passenger Vehicle (PV) Track &amp; Trace</span>
           </div>
           <div className="text-right font-mono text-[11px] text-gray-600">
@@ -654,54 +640,44 @@ export default function App() {
           {/* Left area matching vehicle info columns */}
           <div className="w-[455px] shrink-0 flex items-center justify-between pr-2">
             <div className="flex items-center space-x-2">
-              {/* Functional All Dropdown Menu */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`border px-3 py-1 rounded text-xs font-bold shadow-2xs transition cursor-pointer flex items-center space-x-1.5 ${
+              {/* Functional Filter Dropdown */}
+              <div className="relative flex items-center">
+                <select
+                  value={`${generalFilter.type}:${generalFilter.value}`}
+                  onChange={(e) => {
+                    const [type, value] = e.target.value.split(":");
+                    let foundOpt: GeneralFilterOption = { type: "all", value: "ALL", label: "All Vehicles" };
+                    for (const grp of DROPDOWN_FILTER_GROUPS) {
+                      const match = grp.options.find(o => o.type === type && o.value === value);
+                      if (match) {
+                        foundOpt = match;
+                        break;
+                      }
+                    }
+                    setGeneralFilter(foundOpt);
+                  }}
+                  className={`border px-2.5 py-1 pr-6 rounded text-xs font-bold shadow-2xs transition cursor-pointer appearance-none ${
                     generalFilter.type !== "all"
                       ? "bg-blue-600 text-white border-blue-700 shadow-xs"
                       : "bg-[#002244] hover:bg-[#001730] text-white border-[#002244]"
                   }`}
+                  title="Filter vehicles by work type, model, or status"
                 >
-                  <span className="truncate max-w-[130px]">{generalFilter.label}</span>
-                  <span className={`text-[9px] transform transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}>
-                    ▾
-                  </span>
-                </button>
-
-                {isDropdownOpen && (
-                  <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-gray-300 rounded shadow-2xl z-50 py-1 text-xs text-gray-800 max-h-80 overflow-y-auto">
-                    {DROPDOWN_FILTER_GROUPS.map((grp) => (
-                      <div key={grp.group} className="border-b border-gray-100 last:border-0 pb-1 mb-1 last:mb-0 last:pb-0">
-                        <div className="px-3 py-1 text-[9.5px] font-extrabold text-gray-500 uppercase tracking-wider bg-gray-50">
-                          {grp.group}
-                        </div>
-                        {grp.options.map((opt) => {
-                          const isSelected =
-                            generalFilter.type === opt.type && generalFilter.value === opt.value;
-                          return (
-                            <button
-                              key={`${opt.type}-${opt.value}`}
-                              type="button"
-                              onClick={() => {
-                                setGeneralFilter(opt);
-                                setIsDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between transition hover:bg-blue-50 ${
-                                isSelected ? "bg-blue-100 text-blue-900 font-bold" : "text-gray-700"
-                              }`}
-                            >
-                              <span>{opt.label}</span>
-                              {isSelected && <span className="text-blue-600 font-bold">✓</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  {DROPDOWN_FILTER_GROUPS.map((grp) => (
+                    <optgroup key={grp.group} label={grp.group} className="text-gray-900 bg-white font-bold">
+                      {grp.options.map((opt) => (
+                        <option
+                          key={`${opt.type}-${opt.value}`}
+                          value={`${opt.type}:${opt.value}`}
+                          className="text-gray-800 bg-white font-normal py-1"
+                        >
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-2 text-white text-[9px]">▾</span>
               </div>
 
               <span className="text-[11px] font-bold text-gray-700">
@@ -713,7 +689,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setGeneralFilter({ type: "all", value: "ALL", label: "All" });
+                  setGeneralFilter({ type: "all", value: "ALL", label: "All Vehicles" });
                   setSelectedMilestoneFilter("ALL");
                 }}
                 className="text-[10px] text-blue-700 hover:underline font-semibold cursor-pointer"
@@ -723,24 +699,24 @@ export default function App() {
             )}
           </div>
 
-          {/* Right area matching the stepper line width and padding */}
-          <div className="flex-1 px-1 flex items-center justify-between">
+          {/* Right area matching the stepper line width and padding - grid of 10 columns for complete label display */}
+          <div className="flex-1 px-1 grid grid-cols-10 gap-1.5 items-center">
             {WM_PIPELINE_STAGES.map((label) => {
               const isSelected = selectedMilestoneFilter === label;
               return (
-                <div key={label} className="w-11 flex justify-center">
-                  <button
-                    onClick={() => setSelectedMilestoneFilter(isSelected ? "ALL" : label)}
-                    title={`Filter by ${label}`}
-                    className={`border px-1 py-0.5 rounded shadow-2xs font-extrabold text-[8.5px] uppercase transition cursor-pointer text-center w-full truncate ${
-                      isSelected
-                        ? "bg-blue-600 text-white border-blue-700 shadow-xs"
-                        : "bg-white hover:bg-blue-50 text-gray-800 border-gray-300"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                </div>
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setSelectedMilestoneFilter(isSelected ? "ALL" : label)}
+                  title={`Filter by ${label}`}
+                  className={`border py-1 px-1 rounded shadow-2xs font-extrabold text-[8.5px] uppercase transition cursor-pointer text-center w-full whitespace-nowrap flex items-center justify-center ${
+                    isSelected
+                      ? "bg-blue-600 text-white border-blue-700 shadow-xs"
+                      : "bg-white hover:bg-blue-50 text-gray-800 border-gray-300"
+                  }`}
+                >
+                  {label}
+                </button>
               );
             })}
           </div>
@@ -847,11 +823,11 @@ export default function App() {
 
               {/* Right Stepper Section - flex-1 px-1 matching header */}
               <div className="flex-1 flex flex-col justify-center px-1">
-                <div className="relative flex items-center justify-between">
-                  <div className="absolute top-2 left-2 right-2 h-0.5 bg-gray-200 -z-0"></div>
+                <div className="relative grid grid-cols-10 gap-1.5 items-center">
+                  <div className="absolute top-2 left-[5%] right-[5%] h-0.5 bg-gray-200 -z-0"></div>
                   <div
-                    className="absolute top-2 left-2 h-0.5 bg-emerald-500 -z-0 transition-all duration-300"
-                    style={{ width: `${(v.wmStageIndex / (WM_PIPELINE_STAGES.length - 1)) * 96}%` }}
+                    className="absolute top-2 left-[5%] h-0.5 bg-emerald-500 -z-0 transition-all duration-300"
+                    style={{ width: `${(v.wmStageIndex / 9) * 90}%` }}
                   ></div>
 
                   {WM_PIPELINE_STAGES.map((label, idx) => {
@@ -861,7 +837,7 @@ export default function App() {
                     return (
                       <div
                         key={label}
-                        className="w-11 flex flex-col items-center z-10 cursor-pointer group"
+                        className="flex flex-col items-center z-10 cursor-pointer group w-full"
                         onClick={() => advanceVehicleMilestone(v.id)}
                         title={`Click to set stage to ${label}`}
                       >
@@ -882,7 +858,7 @@ export default function App() {
                         )}
 
                         <span
-                          className={`text-[8px] mt-0.5 tracking-tight text-center max-w-[42px] leading-none ${
+                          className={`text-[8.5px] mt-0.5 tracking-tight text-center leading-tight whitespace-nowrap ${
                             isCurrent ? "font-bold text-emerald-800" : "text-gray-500"
                           }`}
                         >
@@ -926,7 +902,7 @@ export default function App() {
         <div className="flex items-center space-x-4">
           <span className="font-extrabold text-blue-400 tracking-wider text-base">TATA MOTORS</span>
           <span className="text-gray-500">|</span>
-          <span className="text-gray-300">TATA MOTORS PASSENGER VEHICLES LOUNGE (1007960)</span>
+          <span className="text-gray-300">TATA MOTORS PASSENGER VEHICLES LOUNGE (3007960)</span>
           <span className="bg-blue-950 text-blue-300 px-2 py-0.5 rounded border border-blue-800 text-[10px]">
             {currentUser.name}
           </span>
@@ -984,7 +960,7 @@ export default function App() {
         <div className="flex items-center space-x-3">
           {/* Quick Switch to Works Manager */}
           <button
-            onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_1007960" })}
+            onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_3007960" })}
             className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-[11px] px-2.5 py-1 rounded transition"
           >
             🔧 Workshop Board
@@ -1035,17 +1011,16 @@ export default function App() {
                 In Progress
               </div>
               <div className="grid grid-cols-3 gap-3.5">
-                {vehicles.filter(v => !v.isWalkIn).slice(0, 6).map((item) => (
+                {vehicles.filter(v => !v.isWalkIn).slice(0, 6).map((item, idx) => (
                   <div
                     key={item.id}
                     className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg relative group hover:border-cyan-500/50 transition-colors"
                   >
-                    {/* Top Row: Square White Number Tag + Status Badge */}
+                    {/* Top Row: Square White Number Tag */}
                     <div className="flex items-center justify-between">
                       <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
-                        {item.numberTag}
+                        {idx + 1}
                       </div>
-                      {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
 
                     {/* Center: Real High-Quality Transparent PNG Image of Tata Vehicle */}
@@ -1090,7 +1065,6 @@ export default function App() {
                       <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
                         {idx + 1}
                       </div>
-                      {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
 
                     <div className="my-1 h-20 flex items-center justify-center px-1">
@@ -1155,16 +1129,15 @@ export default function App() {
                 In Progress
               </div>
               <div className="grid grid-cols-3 gap-3.5">
-                {vehicles.filter(v => v.isWalkIn).map((item) => (
+                {vehicles.filter(v => v.isWalkIn).map((item, idx) => (
                   <div
                     key={item.id}
                     className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg"
                   >
                     <div className="flex justify-between items-center">
                       <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
-                        {item.numberTag}
+                        {idx + 1}
                       </div>
-                      {renderFlightBadge(item.flightStatus, item.delayMinutes)}
                     </div>
 
                     <div className="my-2 h-24 flex items-center justify-center px-1">
