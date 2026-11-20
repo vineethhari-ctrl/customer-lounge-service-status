@@ -795,6 +795,9 @@ const STATUS_STAGES = [
   { key: "ready", label: "Ready For Delivery" }
 ];
 
+// BU (Nov 2026): "RO Created" is not shown on the lounge Vehicle Status screen.
+const LOUNGE_STATUS_STAGES = STATUS_STAGES.filter((st) => st.key !== "ro_created");
+
 // BU Requirement: Mechanical Vehicle Servicing Milestones (10 Stages)
 export const MECHANICAL_PIPELINE_STAGES = [
   "Gate In",
@@ -904,15 +907,68 @@ const DROPDOWN_FILTER_GROUPS: { group: string; options: GeneralFilterOption[] }[
   }
 ];
 
+// =========================================================================
+// BU changes (Nov 2026): appointments for today only, and log in once a day.
+// =========================================================================
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const fmtLong = (d: Date) => `${pad2(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+const fmtShort = (d: Date) => `${pad2(d.getDate())} ${MONTHS[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
+const fmtSlash = (d: Date) => `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`;
+
+// The sandbox data was written for 19 Oct 2026. Show it as "today" (and 20 Oct as "tomorrow")
+// so the today-only filter has something to show. Real data will come from the DMS.
+function rebaseToToday<T>(data: T): T {
+  const today = new Date();
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+  const json = JSON.stringify(data)
+    .split("19 Oct 2026").join(fmtLong(today)).split("20 Oct 2026").join(fmtLong(tomorrow))
+    .split("19 Oct '26").join(fmtShort(today)).split("20 Oct '26").join(fmtShort(tomorrow))
+    .split("2026/10/19").join(fmtSlash(today)).split("2026/10/20").join(fmtSlash(tomorrow));
+  return JSON.parse(json) as T;
+}
+const isTodayLabel = (label: string) => label.startsWith(fmtShort(new Date())) || label.startsWith(fmtLong(new Date()));
+// "20 Nov '26, 09:15 AM" -> minutes since midnight (for sorting)
+const minutesOf = (label: string) => {
+  const m = label.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!m) return 0;
+  return ((Number(m[1]) % 12) + (m[3].toUpperCase() === "PM" ? 12 : 0)) * 60 + Number(m[2]);
+};
+const timeOnly = (label: string) => label.split(",").pop()?.trim() ?? label;
+
+// Log in once a day: the login is kept on this device until midnight.
+type PortalUser = { role: "Receptionist" | "WorksManager"; name: string; username: string };
+const SESSION_KEY = "tml-service-status-daily-login";
+function loadDailyUser(): PortalUser | null {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null");
+    if (!saved || saved.day !== fmtSlash(new Date())) { localStorage.removeItem(SESSION_KEY); return null; }
+    return saved.user as PortalUser;
+  } catch { return null; }
+}
+function saveDailyUser(user: PortalUser | null) {
+  if (user) localStorage.setItem(SESSION_KEY, JSON.stringify({ user, day: fmtSlash(new Date()) }));
+  else localStorage.removeItem(SESSION_KEY);
+}
+// TV / bit.ly link: ?role=frontoffice shows only the Receptionist login.
+const LOGIN_ROLE = new URLSearchParams(window.location.search).get("role");
+
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<{ role: "Receptionist" | "WorksManager"; name: string; username: string } | null>(null);
+  const [currentUser, setCurrentUserState] = useState<PortalUser | null>(loadDailyUser);
+  const setCurrentUser = (user: PortalUser | null) => { saveDailyUser(user); setCurrentUserState(user); };
+  // After midnight the screen goes back to the login page (the link is kept).
+  useEffect(() => {
+    if (!currentUser) return;
+    const t = setInterval(() => { if (!loadDailyUser()) setCurrentUserState(null); }, 60_000);
+    return () => clearInterval(t);
+  }, [currentUser]);
   const [usernameInput, setUsernameInput] = useState("NP7_3007960");
   const [passwordInput, setPasswordInput] = useState("••••••••••");
 
   // BU Requirement: Support Mechanical vehicle servicing AND Bodyshop servicing
   const [selectedDept, setSelectedDept] = useState<"ALL" | "MECHANICAL" | "BODYSHOP">("ALL");
 
-  const [receptionTab, setReceptionTab] = useState<"appointments" | "walkin" | "status">("appointments");
+  const [receptionTab, setReceptionTab] = useState<"appointments" | "status">("appointments");
   const [rotationCountdown, setRotationCountdown] = useState<number>(15);
   const [isRotating, setIsRotating] = useState<boolean>(true);
 
@@ -924,7 +980,8 @@ export default function App() {
   });
   // Works Manager View Mode: "bay" (Bay-wise Board requested by BU) or "pipeline" (Milestone Pipeline row view)
   const [wmViewMode, setWmViewMode] = useState<"bay" | "pipeline">("bay");
-  const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => rebaseToToday(INITIAL_VEHICLES));
+  const [queueVehicles] = useState<Vehicle[]>(() => rebaseToToday(QUEUE_VEHICLES));
   const [countdown, setCountdown] = useState<number>(20);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -934,19 +991,16 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // 15-Second Auto-Rotation between 1. Appointments and 2. Walk-In Customers for Reception Login
+  // 15-Second Auto-Rotation between 1. Appointments and 2. Vehicle Status for Reception Login (Walk-In screen removed)
   useEffect(() => {
     if (!currentUser || currentUser.role !== "Receptionist") return;
 
     const rotationInterval = setInterval(() => {
       if (!isRotating) return;
 
-      // Only auto-rotate when currently displaying Appointments or Walk-In Customers
-      if (receptionTab === "status") return;
-
       setRotationCountdown((prev) => {
         if (prev <= 1) {
-          setReceptionTab((curr) => (curr === "appointments" ? "walkin" : "appointments"));
+          setReceptionTab((curr) => (curr === "appointments" ? "status" : "appointments"));
           return 15;
         }
         return prev - 1;
@@ -1260,12 +1314,14 @@ export default function App() {
                 >
                   <span>📺 Customer Lounge &amp; FIDS Display</span>
                 </button>
+                {LOGIN_ROLE !== "frontoffice" && (
                 <button
                   onClick={() => setCurrentUser({ role: "WorksManager", name: "Neeraj Patel (Works Manager)", username: "NP7_3007960" })}
                   className="w-full bg-[#002244] hover:bg-[#001730] text-white py-2.5 rounded text-xs font-semibold transition shadow-xs flex items-center justify-center space-x-1.5"
                 >
                   <span>🔧 Works Manager Workshop Board</span>
                 </button>
+                )}
               </div>
             </div>
           </div>
@@ -2338,25 +2394,17 @@ export default function App() {
           </button>
           <button
             onClick={() => {
-              setReceptionTab("walkin");
+              setReceptionTab("status");
               setRotationCountdown(15);
             }}
-            className={`px-3 py-1 rounded font-semibold transition ${
-              receptionTab === "walkin" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
-            }`}
-          >
-            2. Walk-In Customers
-          </button>
-          <button
-            onClick={() => setReceptionTab("status")}
             className={`px-3 py-1 rounded font-semibold transition ${
               receptionTab === "status" ? "bg-blue-600 text-white shadow-xs" : "text-gray-400 hover:text-white"
             }`}
           >
-            3. Vehicle Status
+            2. Vehicle Status
           </button>
 
-          {receptionTab !== "status" && (
+          {(
             <div className="flex items-center space-x-1.5 bg-blue-950/80 border border-blue-600/60 px-2 py-0.5 rounded text-[11px] text-blue-200 ml-1 shadow-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
               <span>
@@ -2454,161 +2502,65 @@ export default function App() {
               <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
               <span className="text-[11px] text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                <span>Auto-switching to Walk-In Customers in <b>{rotationCountdown}s</b></span>
+                <span>Auto-switching to Vehicle Status in <b>{rotationCountdown}s</b></span>
               </span>
             </div>
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
-          <div className="flex-1 grid grid-cols-12 gap-5">
-            {/* In Progress Cards Grid - Customer-facing Service Progress */}
-            <div className="col-span-8 flex flex-col">
-              <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
-                Vehicles In Service (Live Progress)
-              </div>
-              <div className="grid grid-cols-3 gap-3.5">
-                {vehicles
-                  .filter(v => !v.isWalkIn && (selectedDept === "ALL" || v.serviceDept === selectedDept))
-                  .slice(0, 6)
-                  .map((item, idx) => {
-                    const itemDelay = getLiveVehicleDelay(item);
-                    const isItemDelayed = item.flightStatus === "DELAYED" || item.isPtdCrossed;
-                    const isBodyshop = item.serviceDept === "BODYSHOP";
-
+          {/* BU: list view (no tiles, no vehicle images), today's appointments only, no walk-in differentiation */}
+          <div className="flex-1 overflow-x-auto">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-xs">
+                  <th className="py-3 px-3">#</th>
+                  <th className="py-3 px-3">Time</th>
+                  <th className="py-3 px-3">Vehicle No.</th>
+                  <th className="py-3 px-3">Model</th>
+                  <th className="py-3 px-3">Customer</th>
+                  <th className="py-3 px-3">Service Advisor</th>
+                  <th className="py-3 px-3">Department</th>
+                  <th className="py-3 px-3">Work Type</th>
+                  <th className="py-3 px-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {[
+                  ...vehicles.map((v) => ({ v, upcoming: false })),
+                  ...queueVehicles.map((v) => ({ v, upcoming: true })),
+                ]
+                  .filter(({ v }) => isTodayLabel(v.gateInDate) && (selectedDept === "ALL" || v.serviceDept === selectedDept))
+                  .sort((a, b) => minutesOf(a.v.gateInDate) - minutesOf(b.v.gateInDate))
+                  .map(({ v, upcoming }, idx) => {
+                    const isBodyshop = v.serviceDept === "BODYSHOP";
                     return (
-                      <div
-                        key={item.id}
-                        className={`bg-[#0b1726] rounded-md p-3 flex flex-col justify-between shadow-lg relative group transition-colors ${
-                          isItemDelayed
-                            ? "border-2 border-red-500 ring-2 ring-red-500/40 bay-border-alarm"
-                            : "border border-[#1e2d42] hover:border-cyan-500/50"
-                        }`}
-                      >
-                        {/* Top Row: Sequential Number Tag + Department Badge + PTD Alarm (NO BAY ID) */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
-                              {idx + 1}
-                            </div>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                              isBodyshop
-                                ? "bg-amber-950 text-amber-300 border-amber-800/80"
-                                : "bg-blue-950 text-cyan-300 border-blue-700/80"
-                            }`}>
-                              {isBodyshop ? "🎨 Bodyshop" : "🚗 Mechanical"}
-                            </span>
-                          </div>
-                          {isItemDelayed ? (
-                            <div className="flex flex-col items-end">
-                              <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded blink-alarm tracking-wide uppercase shadow-xs flex items-center space-x-1">
-                                <span className="w-1 h-1 rounded-full bg-white animate-ping"></span>
-                                <span>PTD CROSSED ({itemDelay.displayLive})</span>
-                              </span>
-                              <span className="text-[8.5px] text-red-300 font-mono font-bold mt-0.5">
-                                📅 {item.ptdDate} • ⏰ {item.ptdTime}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-end text-[9px] text-emerald-400 font-mono font-semibold">
-                              <span>📅 {item.ptdDate}</span>
-                              <span>⏰ {item.ptdTime}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Center: Real High-Quality Transparent PNG Image of Tata Vehicle */}
-                        <div className="my-2 h-24 flex items-center justify-center px-1">
-                          {getTataCarImage(item.model)}
-                        </div>
-
-                        {/* Middle: Cyan Model Name on Left + IND License Plate on Right */}
-                        <div className="flex items-center justify-between my-2">
-                          <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
-                          {renderIndianPlate(item.regNo)}
-                        </div>
-
-                        {/* Bodyshop Customer Estimate Approval Badge (If applicable) */}
-                        {isBodyshop && item.bodyshopEstimate && (
-                          <div className="mb-2 bg-amber-950/40 border border-amber-800/60 rounded px-2 py-1 text-[9.5px] flex items-center justify-between">
-                            <span className="text-amber-300 font-semibold">Customer Estimate Approval:</span>
-                            <span className={`font-bold px-1.5 py-0.2 rounded text-[8.5px] uppercase ${
-                              item.bodyshopEstimate.approvalStatus === "Approved" ? "bg-emerald-800 text-white" : "bg-amber-600 text-white animate-pulse"
-                            }`}>
-                              {item.bodyshopEstimate.approvalStatus}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Bottom Ribbon: Customer & Service Advisor & Work Type (NO BAY ID) */}
-                        <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Customer</div>
-                            <div className="font-bold text-white uppercase truncate">{item.customer}</div>
-                          </div>
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
-                            <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            {/* Next In Queue Cards - Customer Queue (No Bay Staging) */}
-            <div className="col-span-4 flex flex-col">
-              <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
-                Next In Queue (Upcoming Service Queue)
-              </div>
-              <div className="space-y-3">
-                {QUEUE_VEHICLES
-                  .filter(v => selectedDept === "ALL" || v.serviceDept === selectedDept)
-                  .map((item, idx) => {
-                    const isBodyshop = item.serviceDept === "BODYSHOP";
-
-                    return (
-                      <div
-                        key={`queue-${item.id}`}
-                        className="bg-[#0b1726] border border-[#1e2d42] rounded-md p-3 flex flex-col justify-between shadow-lg relative"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
-                            {idx + 1}
-                          </div>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                            isBodyshop
-                              ? "bg-amber-950 text-amber-300 border-amber-800/80"
-                              : "bg-blue-950 text-cyan-300 border-blue-700/80"
+                      <tr key={`appt-${v.id}`} className="hover:bg-[#0c1827]">
+                        <td className="py-2.5 px-3 text-gray-400 font-mono">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-cyan-300">{timeOnly(v.gateInDate)}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-white tracking-wide">{v.regNo}</td>
+                        <td className="py-2.5 px-3 text-gray-200">{v.model}</td>
+                        <td className="py-2.5 px-3 font-bold text-white uppercase">{v.customer}</td>
+                        <td className="py-2.5 px-3 text-gray-200">{v.serviceAdvisor}</td>
+                        <td className="py-2.5 px-3">
+                          <span className={`px-2 py-0.5 rounded font-bold text-[11px] border ${
+                            isBodyshop ? "bg-amber-950 text-amber-300 border-amber-800" : "bg-blue-950 text-cyan-300 border-blue-800"
                           }`}>
-                            {isBodyshop ? "🎨 Bodyshop Queue" : "🚗 Mechanical Queue"}
+                            {isBodyshop ? "🎨 Bodyshop" : "🚗 Mechanical"}
                           </span>
-                        </div>
-
-                        <div className="my-1 h-20 flex items-center justify-center px-1">
-                          {getTataCarImage(item.model)}
-                        </div>
-
-                        <div className="flex items-center justify-between my-2">
-                          <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
-                          {renderIndianPlate(item.regNo)}
-                        </div>
-
-                        <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Customer</div>
-                            <div className="font-bold text-white uppercase truncate">{item.customer}</div>
-                          </div>
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
-                            <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
-                          </div>
-                        </div>
-                      </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-gray-300">{v.workType}</td>
+                        <td className="py-2.5 px-3">
+                          {upcoming ? (
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold border bg-slate-800 text-slate-300 border-slate-600">EXPECTED</span>
+                          ) : (
+                            renderFlightBadge(v.flightStatus, v.delayMinutes, v.isPtdCrossed, getLiveVehicleDelay(v).displayLive)
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
 
           <div className="mt-6 pt-3 border-t border-gray-800 flex items-center justify-between text-xs">
@@ -2618,124 +2570,6 @@ export default function App() {
             </div>
             <div className="bg-[#0d1c2d] px-4 py-1 rounded-full border border-gray-800 text-gray-300 text-xs">
               Appointment bookings can now be made directly through the <b className="text-cyan-400">Tata Motors Service Connect App</b>.
-            </div>
-            <div className="flex space-x-2 font-mono text-xs">
-              <span className="bg-[#112233] px-3 py-1 rounded border border-gray-700 text-cyan-300 font-bold">
-                📅 {currentTime.toLocaleDateString("en-IN", { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
-              </span>
-              <span className="bg-[#112233] px-3 py-1 rounded border border-gray-700 text-white font-bold">
-                ⏰ {currentTime.toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-              </span>
-            </div>
-          </div>
-        </main>
-      )}
-
-      {/* RECEPTIONIST SCREEN 2: WALK-IN CUSTOMERS (No Bay tracking) */}
-      {receptionTab === "walkin" && (
-        <main className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
-            <div className="flex items-center space-x-3">
-              <span className="text-xl font-bold tracking-tight text-white uppercase">Walk-In Customers</span>
-              <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
-              <span className="text-[11px] text-cyan-300 bg-cyan-950/70 border border-cyan-800/80 px-2.5 py-0.5 rounded-full flex items-center space-x-1.5 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                <span>Auto-switching to Appointments in <b>{rotationCountdown}s</b></span>
-              </span>
-            </div>
-            <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
-          </div>
-
-          <div className="flex-1 grid grid-cols-12 gap-5">
-            <div className="col-span-8">
-              <div className="bg-[#0b1726] border border-gray-800 text-center py-1.5 font-semibold text-xs tracking-wider uppercase text-gray-300 mb-3 rounded-t">
-                Priority Walk-In Customers (In Service)
-              </div>
-              <div className="grid grid-cols-3 gap-3.5">
-                {vehicles
-                  .filter(v => v.isWalkIn && (selectedDept === "ALL" || v.serviceDept === selectedDept))
-                  .map((item, idx) => {
-                    const itemDelay = getLiveVehicleDelay(item);
-                    const isItemDelayed = item.flightStatus === "DELAYED" || item.isPtdCrossed;
-                    const isBodyshop = item.serviceDept === "BODYSHOP";
-
-                    return (
-                      <div
-                        key={item.id}
-                        className={`bg-[#0b1726] rounded-md p-3 flex flex-col justify-between shadow-lg ${
-                          isItemDelayed ? "border-2 border-red-500 ring-2 ring-red-500/40 bay-border-alarm" : "border border-[#1e2d42]"
-                        }`}
-                      >
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-5 h-5 bg-white text-slate-900 font-extrabold text-xs flex items-center justify-center rounded-xs shadow">
-                              {idx + 1}
-                            </div>
-                            <span className="bg-amber-950 text-amber-300 border border-amber-700/80 px-2 py-0.5 rounded text-[10px] font-bold">
-                              ⚡ Walk-In Express
-                            </span>
-                            <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                              isBodyshop ? "bg-amber-900 text-amber-200" : "bg-blue-900 text-cyan-200"
-                            }`}>
-                              {isBodyshop ? "Bodyshop" : "Mechanical"}
-                            </span>
-                          </div>
-                          {isItemDelayed ? (
-                            <div className="flex flex-col items-end">
-                              <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded blink-alarm tracking-wide uppercase shadow-xs flex items-center space-x-1">
-                                <span className="w-1 h-1 rounded-full bg-white animate-ping"></span>
-                                <span>PTD CROSSED ({itemDelay.displayLive})</span>
-                              </span>
-                              <span className="text-[8.5px] text-red-300 font-mono font-bold mt-0.5">
-                                📅 {item.ptdDate} • ⏰ {item.ptdTime}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-end text-[9px] text-emerald-400 font-mono font-semibold">
-                              <span>📅 {item.ptdDate}</span>
-                              <span>⏰ {item.ptdTime}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="my-2 h-24 flex items-center justify-center px-1">
-                          {getTataCarImage(item.model)}
-                        </div>
-
-                        <div className="flex items-center justify-between my-2">
-                          <span className="text-lg font-extrabold text-[#00b4d8] tracking-tight">{item.model}</span>
-                          {renderIndianPlate(item.regNo)}
-                        </div>
-
-                        <div className="bg-[#060e18] border-t border-[#132033] -mx-3 -mb-3 px-3 py-2 rounded-b grid grid-cols-2 text-[10px]">
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Customer</div>
-                            <div className="font-bold text-white uppercase truncate">{item.customer}</div>
-                          </div>
-                          <div>
-                            <div className="text-[9px] text-gray-400 font-normal">Service Advisor</div>
-                            <div className="font-bold text-white truncate">{item.serviceAdvisor}</div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-
-            <div className="col-span-4 border border-dashed border-gray-800 rounded flex flex-col items-center justify-center text-gray-400 text-xs p-6 text-center">
-              <span className="font-semibold text-gray-300 mb-1">Priority Express Service Track</span>
-              <span>All registered walk-in passenger vehicles are actively in service in the workshop.</span>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-3 border-t border-gray-800 flex items-center justify-between text-xs">
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-white">TATA MOTORS</span>
-              <span className="text-gray-400 text-xs">Fast Track &amp; Priority Express Service</span>
-            </div>
-            <div className="bg-[#0d1c2d] px-4 py-1 rounded-full border border-gray-800 text-gray-300 text-xs">
-              Priority Express Track delivers prompt turnaround for scheduled walk-in services.
             </div>
             <div className="flex space-x-2 font-mono text-xs">
               <span className="bg-[#112233] px-3 py-1 rounded border border-gray-700 text-cyan-300 font-bold">
@@ -2766,12 +2600,12 @@ export default function App() {
                 <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-[11px]">
                   <th className="py-3 px-3">Vehicle</th>
                   <th className="py-3 px-3">Registration</th>
+                  <th className="py-3 px-3">Customer</th>
                   <th className="py-3 px-3">Department</th>
                   <th className="py-3 px-3">Work Type</th>
                   <th className="py-3 px-3">Service Advisor</th>
-                  <th className="py-3 px-3">PTD (Delivery Date &amp; Time)</th>
                   <th className="py-3 px-3">Status</th>
-                  {STATUS_STAGES.map((col) => (
+                  {LOUNGE_STATUS_STAGES.map((col) => (
                     <th key={col.key} className="py-3 px-2 text-center">
                       {col.label}
                     </th>
@@ -2794,6 +2628,7 @@ export default function App() {
                           </div>
                         </td>
                         <td className="py-3 px-3 font-mono">{renderIndianPlate(v.regNo)}</td>
+                        <td className="py-3 px-3 font-bold text-white text-[12px] uppercase">{v.customer}</td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${
                             isBodyshop
@@ -2815,16 +2650,6 @@ export default function App() {
                         </td>
                         <td className="py-3 px-3 text-gray-200">
                           <div className="font-bold text-[11px]">{v.serviceAdvisor}</div>
-                          <div className="text-[10px] text-gray-400 uppercase">{v.customer}</div>
-                        </td>
-                        <td className="py-3 px-3 font-mono">
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-gray-300 font-semibold">📅 {v.ptdDate}</span>
-                            <span className={`font-black text-xs ${isItemDelayed ? "text-red-400 blink-alarm" : "text-emerald-400"}`}>
-                              ⏰ {v.ptdTime} {isItemDelayed ? "⚠️" : ""}
-                            </span>
-                            <span className="text-[9px] text-gray-500">Target: {v.plannedTime}</span>
-                          </div>
                         </td>
                         <td className="py-3 px-3">
                           {renderFlightBadge(v.flightStatus, v.delayMinutes, v.isPtdCrossed, itemDelay.displayLive)}
@@ -2834,8 +2659,8 @@ export default function App() {
                             </div>
                           )}
                         </td>
-                        {STATUS_STAGES.map((col, idx) => {
-                          const isCompleted = idx <= v.stageIndex;
+                        {LOUNGE_STATUS_STAGES.map((col) => {
+                          const isCompleted = STATUS_STAGES.indexOf(col) <= v.stageIndex;
                           return (
                             <td key={col.key} className="py-3 px-2 text-center">
                               <div className="flex justify-center">
