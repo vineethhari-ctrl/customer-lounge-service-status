@@ -1155,18 +1155,6 @@ export default function App() {
   };
 
   // Indian Number Plate badge with authentic IND blue strip
-  const renderIndianPlate = (plate: string) => (
-    <div className="inline-flex items-center bg-white text-black font-mono px-1.5 py-0.5 rounded shadow-xs border border-slate-300">
-      <div className="flex flex-col items-center justify-center bg-[#003399] text-white px-1 py-0.5 rounded-xs mr-1.5 leading-none">
-        <div className="w-2 h-2 rounded-full border border-dotted border-white/90 flex items-center justify-center mb-0.5">
-          <div className="w-0.5 h-0.5 rounded-full bg-white"></div>
-        </div>
-        <span className="text-[6px] font-sans font-bold tracking-tighter">IND</span>
-      </div>
-      <span className="text-xs font-black text-slate-900 tracking-wider font-mono">{plate}</span>
-    </div>
-  );
-
   // BU Requirement: Current status with color, and BLINK if delayed or PTD crossed (showing live ticking delay)
   const renderFlightBadge = (
     status: Vehicle["flightStatus"],
@@ -1735,7 +1723,7 @@ export default function App() {
                             </div>
 
                             <div className="flex flex-col items-end shrink-0">
-                              {renderIndianPlate(primaryVeh.regNo)}
+                              <span className="font-mono font-black text-slate-900 tracking-wider text-sm">{primaryVeh.regNo}</span>
                               <span className="text-[10px] font-semibold text-gray-600 mt-1">Odo: {primaryVeh.odometer}</span>
                             </div>
                           </div>
@@ -2563,7 +2551,7 @@ export default function App() {
                     return (
                       <tr key={v.id} className={`transition ${isItemDelayed ? "bg-red-950/20 hover:bg-red-950/30" : "hover:bg-[#0c1827]"}`}>
                         <td className="py-3 px-3 font-bold text-[#00b4d8] text-[13px]">{v.model}</td>
-                        <td className="py-3 px-3 font-mono">{renderIndianPlate(v.regNo)}</td>
+                        <td className="py-3 px-3 font-mono font-bold text-white tracking-wide text-[13px]">{v.regNo}</td>
                         <td className="py-3 px-3 font-bold text-white text-[12px] uppercase">{v.customer}</td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${

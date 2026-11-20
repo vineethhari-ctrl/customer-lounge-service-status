@@ -14,6 +14,7 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - 7: `?role=frontoffice` shows only the Receptionist (Customer Lounge) login, for the TV bit.ly link:
   `https://vineethhari-ctrl.github.io/customer-lounge-service-status/?role=frontoffice` (user creates the bit.ly link).
 - No car images anywhere (BU rule): image helper and `public/images/cars` deleted; Vehicle Status shows the model as text.
+- Number plates shown as plain text (decorative "IND" plate graphic removed) on Vehicle Status and Works Manager.
 - Works Manager board otherwise unchanged.
 
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
