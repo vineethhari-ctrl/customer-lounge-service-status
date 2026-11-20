@@ -13,7 +13,8 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - 6: Login once a day: kept on the device until midnight, then back to login.
 - 7: `?role=frontoffice` shows only the Receptionist (Customer Lounge) login, for the TV bit.ly link:
   `https://vineethhari-ctrl.github.io/customer-lounge-service-status/?role=frontoffice` (user creates the bit.ly link).
-- Works Manager board unchanged.
+- No car images anywhere (BU rule): image helper and `public/images/cars` deleted; Vehicle Status shows the model as text.
+- Works Manager board otherwise unchanged.
 
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
@@ -23,6 +24,7 @@ Full redesign from BU's whiteboard and notebook photos, waiting for the user's g
 - Data layer behind a DataSource interface (sandbox now, DMS later), refresh every 60 s.
 - Decisions taken there (user answered: show "Done"; data from DMS; the rest decided by Claude):
   Elapsed = now − actual start; Delayed = past planned start (not started) / past planned end (WIP) / ended after planned end (Done).
+- BU rule: NO car images anywhere (the branch has none; delete `public/images/cars` there too when merging).
 - When resuming: rebase this branch on main (it also contains points 2–7 in its own way; keep the redesign's version).
 
 ## Open questions (for BU)
@@ -30,5 +32,4 @@ Full redesign from BU's whiteboard and notebook photos, waiting for the user's g
 - Confirm the "Delayed" rule and the milestone list and logic.
 - DMS: which system, API access, how plan and actual times are recorded.
 - Is a real login needed, or is the once-a-day mock enough for TVs?
-- Should Vehicle Status also drop the car images (only asked for Appointments)?
 - `package.json` name is still `react-example`.

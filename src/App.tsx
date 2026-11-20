@@ -1,60 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
-// =========================================================================
-// REAL TATA MOTORS PASSENGER VEHICLES (PV) IMAGES MAPPING
-// High-resolution transparent background PNGs with authentic silhouettes & subtle drop shadow
-// =========================================================================
-
-export function getTataCarImage(
-  model: string,
-  className: string = "w-full h-full object-contain filter drop-shadow-[0_8px_14px_rgba(0,0,0,0.6)] transition-transform duration-200"
-) {
-  const norm = (model || "").toLowerCase();
-  let localPath = "/images/cars/safari.png";
-  let cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/138895/safari-exterior-right-front-three-quarter-40.png?isig=0&q=80";
-  let altText = "Tata Safari";
-
-  if (norm.includes("harrier")) {
-    localPath = "/images/cars/harrier.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/139139/harrier-exterior-right-front-three-quarter-7.png?isig=0&q=80";
-    altText = "Tata Harrier";
-  } else if (norm.includes("nexon")) {
-    localPath = "/images/cars/nexon.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/141867/nexon-exterior-right-front-three-quarter-79.png?isig=0&q=80";
-    altText = "Tata Nexon";
-  } else if (norm.includes("punch")) {
-    localPath = "/images/cars/punch.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/172825/punch-exterior-right-front-three-quarter-250.png?isig=0&q=80";
-    altText = "Tata Punch";
-  } else if (norm.includes("altroz")) {
-    localPath = "/images/cars/altroz.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/199863/altroz-exterior-right-front-three-quarter-13.png?isig=0&q=80";
-    altText = "Tata Altroz";
-  } else if (norm.includes("curvv")) {
-    localPath = "/images/cars/curvv.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/139651/curvv-exterior-right-front-three-quarter-16.png?isig=0&q=80";
-    altText = "Tata Curvv";
-  } else if (norm.includes("safari")) {
-    localPath = "/images/cars/safari.png";
-    cdnFallback = "https://imgd.aeplcdn.com/664x374/n/cw/ec/138895/safari-exterior-right-front-three-quarter-40.png?isig=0&q=80";
-    altText = "Tata Safari";
-  }
-
-  return (
-    <img
-      src={localPath}
-      alt={altText}
-      className={className}
-      loading="eager"
-      onError={(e) => {
-        // Fallback to official CDN if local file encounters any issue
-        if (e.currentTarget.src !== cdnFallback) {
-          e.currentTarget.src = cdnFallback;
-        }
-      }}
-    />
-  );
-}
+// BU: no car images anywhere in the portal.
 
 export type ServiceDepartment = "MECHANICAL" | "BODYSHOP";
 
@@ -1769,9 +1715,6 @@ export default function App() {
                           {/* Vehicle Primary Info & Plate */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
                             <div className="flex items-center space-x-3">
-                              <div className="w-24 h-14 bg-[#071322] rounded border border-gray-200 p-1 flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
-                                {getTataCarImage(primaryVeh.model, "w-full h-full object-contain filter drop-shadow-[0_3px_5px_rgba(0,0,0,0.5)]")}
-                              </div>
                               <div>
                                 <div className="flex items-center space-x-2 mb-0.5">
                                   <span className="text-base font-extrabold text-blue-950">{primaryVeh.fullModelName}</span>
@@ -2208,11 +2151,8 @@ export default function App() {
                   >
                   {/* Left Vehicle Details - width 455px matching header */}
                   <div className="flex items-center gap-2.5 w-[455px] shrink-0">
-                    {/* PV Real Image Box & Tag Badge */}
+                    {/* Bay Tag Badge */}
                     <div className="flex flex-col items-center justify-center w-[115px] shrink-0">
-                      <div className="w-22 h-10 flex items-center justify-center bg-[#071322] rounded border border-gray-200 p-0.5 mb-0.5 shadow-2xs overflow-hidden">
-                        {getTataCarImage(v.model, "w-full h-full object-contain filter drop-shadow-[0_3px_5px_rgba(0,0,0,0.5)]")}
-                      </div>
                       {/* Bay ID Badge */}
                       <span className={`text-[8px] font-black px-1.5 py-0.2 rounded-xs shadow-2xs truncate max-w-[115px] leading-tight text-center font-mono ${
                         isBodyshop ? "bg-[#801b00] text-amber-200" : "bg-[#002244] text-cyan-300"
@@ -2598,7 +2538,7 @@ export default function App() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-[11px]">
-                  <th className="py-3 px-3">Vehicle</th>
+                  <th className="py-3 px-3">Model</th>
                   <th className="py-3 px-3">Registration</th>
                   <th className="py-3 px-3">Customer</th>
                   <th className="py-3 px-3">Department</th>
@@ -2622,11 +2562,7 @@ export default function App() {
 
                     return (
                       <tr key={v.id} className={`transition ${isItemDelayed ? "bg-red-950/20 hover:bg-red-950/30" : "hover:bg-[#0c1827]"}`}>
-                        <td className="py-2 px-3">
-                          <div className="w-24 h-14 bg-[#071322] rounded p-1 overflow-hidden flex items-center justify-center border border-gray-800">
-                            {getTataCarImage(v.model)}
-                          </div>
-                        </td>
+                        <td className="py-3 px-3 font-bold text-[#00b4d8] text-[13px]">{v.model}</td>
                         <td className="py-3 px-3 font-mono">{renderIndianPlate(v.regNo)}</td>
                         <td className="py-3 px-3 font-bold text-white text-[12px] uppercase">{v.customer}</td>
                         <td className="py-3 px-3">
