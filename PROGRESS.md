@@ -1,45 +1,42 @@
 # PROGRESS — Customer Lounge & Works Manager Service Status Portal
 
-Standalone repo (exported from Google AI Studio app "Tata Motors TMSA-CV Workshop Portal & FIDS").
-Not related to tml-appointment-journey or TML-ST-Admin; don't mix them.
+Standalone repo (exported from Google AI Studio). Not related to tml-appointment-journey or TML-ST-Admin.
+Live (main): https://vineethhari-ctrl.github.io/customer-lounge-service-status/ (GitHub Pages; every push to main deploys).
 
-## What the app is
-- Single-page React 18 + TypeScript + Vite 5 + Tailwind v4 app; nearly all logic is in `src/App.tsx` (~2.9k lines).
-- Mock login with two roles (no real auth):
-  - **Receptionist / Customer Lounge (FIDS-style display):** tabs 1. Appointments, 2. Walk-In Customers,
-    3. Vehicle Status. Appointments and Walk-In switch automatically every 15 s (can be paused).
-  - **Works Manager / Workshop Board:** 12 bays (6 Mechanical, 6 Bodyshop), bay and pipeline views,
-    milestone stepper (Mechanical 10 stages; Bodyshop 11, which adds "Customer estimate approval"),
-    PTD-delay blinking alarms, filters by department, bay and work type.
-- Department filter: All / Mechanical / Bodyshop. Data refreshes every 20 s (a random vehicle moves on a stage).
-  An optional airport-style chime (WebAudio) plays on refresh when sound is on.
-- Data is in-memory mock (`INITIAL_VEHICLES`, `WORKSHOP_BAYS`). Customer names and vehicle numbers are sandbox data; keep them.
-
-## Run / build
-- `npm install --legacy-peer-deps`, then `npm run dev` (port 3000), `npm run lint` (tsc), `npm run build` (output in `dist/`).
-- CI: `.github/workflows/static.yml` builds on push to `main` and deploys `dist/` to GitHub Pages.
+## What the app is (branch feature/bu-simple-list-views)
+- React 18 + TS + Vite 5 + Tailwind v4. Simple table screens for a 43" TV, redesigned from BU's whiteboard and notebook input (2026-11-20).
+- **Front Office:** Today's Appointments (list, no walk-in split) and Vehicle Status (today's EDT vehicles only,
+  customer name, stages incl. Washing, no RO / promise date). Auto-switch every 15 s, All/Mechanical/Bodyshop filter, chime when a vehicle is ready.
+- **Works Manager Bay Board:** one row per bay: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status | Time.
+  Filter by bay group (S1/S2/S3), summary counts, auto-paging when rows don't fit.
+- Code: `src/config.ts` (groups, milestones, timings), `src/logic.ts` (rules), `src/data/` (types, mock source, `source.ts` = swap point for the DMS), `src/screens/`.
+- Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && npm run build`.
 
 ## Done
-- 2026-11-20: Reviewed the repo. Install, lint and build all pass on Node 22 (bundle: JS 232 kB, 63 kB gzipped).
-- 2026-11-20: Secret check: only `.env.example` (placeholders) is tracked, and `.gitignore` excludes `.env*`.
-  History scanned: the old `server.ts` (removed in 6dcf7d9) only read `process.env.GEMINI_API_KEY`; no keys found.
+- 2026-11-20: Repo review; build OK; no secrets committed (only `.env.example`; history clean).
+- 2026-11-20: Rebuilt the UI as TV-friendly tables on branch `feature/bu-simple-list-views` (old card UI replaced).
+  Removed the duplicate Tailwind CDN script. Login is remembered on the device; screen and filters are kept in the URL (bookmarkable).
 
 ## In progress
-- Nothing. Waiting for the user's instructions.
+- Waiting for the user to review the branch before merging to main (merging changes the live site).
 
 ## Next step
-- Ask the user for priorities. Candidates are in the open questions below.
+- After approval: merge to main. Then a DMS adapter (`src/data/source.ts`) once the API, credentials and field mapping are known.
 
-## Decisions
-- Keep sandbox customer and vehicle data as is.
-- `npm install` creates `package-lock.json`. It was NOT committed: the repo tracks `bun.lock` and CI uses `npm install`.
+## Decisions (user: "Done" status, data from DMS; the rest decided by Claude, to confirm with BU)
+- Status values: Yet to start / WIP / Done (from actual start and end time stamps).
+- Elapsed = now − actual start (frozen at actual end).
+- Time: Yet to start → Delayed after planned start; WIP → Delayed after planned end; Done → Delayed if it ended after planned end.
+- Bay groups: S1 = 5 (Express, Mech), S2 = 15 (Mech), S3 = 20 (Bodyshop) = 40 bays. Placeholders in `config.ts`.
+- Vehicle cell = reg no. + model · job type (reading of "Next / Running" on the whiteboard).
+- Milestones: Mech = Gate In, Job Card, In Bay (WIP), Washing, Ready; Bodyshop adds Estimate Approval.
+- Data: `DataSource` interface; sandbox mock now, DMS later. Refresh every 60 s.
+- Login: mock (no auth); remembered in localStorage until Sign out. Short link (bit.ly) to be created by the user.
+- Sandbox customer names and number plates are kept.
 
-## Open questions / issues found
-- Car images use absolute paths (`/images/cars/...`) while `vite.config.ts` uses `base: './'`. On GitHub Pages
-  (served under `/customer-lounge-service-status/`) the images will probably 404. Fix: use `import.meta.env.BASE_URL`.
-- `index.html` loads the Tailwind Play CDN as well as `@tailwindcss/vite`, so Tailwind loads twice. Remove the CDN?
-- No README (it was deleted from history). Add one?
-- `metadata.json` mentions Gemini / "AI Telecaller VOC Engine", but the server code is gone. Is that feature dropped?
-- The login form is pre-filled with ID `NP7_3007960` and staff names. Is that a real employee ID? The repo is public.
-- `package.json` name is still `react-example`. Rename it?
-- `App.tsx` is a single large file. Split it into components or data modules?
+## Open questions (for BU)
+- Real bay group names and counts (paper reads 5 / 15 / 11, but "40 bays" is circled).
+- Confirm the "Delayed" rule and the milestone list and logic.
+- DMS: which system, API access, how plan and actual times are recorded.
+- Is a real login needed, or is a device-remembered mock enough for TVs?
+- `package.json` name is still `react-example`; `public/images/cars` is no longer used.

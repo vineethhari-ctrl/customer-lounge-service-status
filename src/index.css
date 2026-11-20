@@ -1,31 +1,8 @@
 @import "tailwindcss";
 
-@keyframes alarmBlink {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.3;
-    transform: scale(0.97);
-  }
-}
+/* Scale all text with the screen width so a 43" TV and a laptop both read well. */
+html { font-size: clamp(13px, 0.9vw, 26px); }
+body { margin: 0; background: #0b1730; font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
 
-@keyframes borderAlarm {
-  0%, 100% {
-    border-color: #ef4444;
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
-  }
-  50% {
-    border-color: rgba(239, 68, 68, 0.35);
-    box-shadow: 0 0 4px rgba(239, 68, 68, 0.15);
-  }
-}
-
-.blink-alarm {
-  animation: alarmBlink 1.1s infinite ease-in-out;
-}
-
-.bay-border-alarm {
-  animation: borderAlarm 1.3s infinite ease-in-out;
-}
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.blink { animation: blink 1.2s ease-in-out infinite; }
