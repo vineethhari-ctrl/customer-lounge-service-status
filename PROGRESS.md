@@ -15,7 +15,7 @@ Live (main): https://vineethhari-ctrl.github.io/customer-lounge-service-status/ 
 ## Done
 - 2026-11-20: Repo review; build OK; no secrets committed (only `.env.example`; history clean).
 - 2026-11-20: Rebuilt the UI as TV-friendly tables on branch `feature/bu-simple-list-views` (old card UI replaced).
-  Removed the duplicate Tailwind CDN script. Login is remembered on the device; screen and filters are kept in the URL (bookmarkable).
+  Removed the duplicate Tailwind CDN script. Login once a day; screen, filters and role are kept in the URL (bookmarkable / bit.ly).
 
 ## In progress
 - Waiting for the user to review the branch before merging to main (merging changes the live site).
@@ -31,7 +31,8 @@ Live (main): https://vineethhari-ctrl.github.io/customer-lounge-service-status/ 
 - Vehicle cell = reg no. + model · job type (reading of "Next / Running" on the whiteboard).
 - Milestones: Mech = Gate In, Job Card, In Bay (WIP), Washing, Ready; Bodyshop adds Estimate Approval.
 - Data: `DataSource` interface; sandbox mock now, DMS later. Refresh every 60 s.
-- Login: mock (no auth); remembered in localStorage until Sign out. Short link (bit.ly) to be created by the user.
+- Login: mock (no auth); valid for the current day only (expires at midnight, TV returns to login, link kept).
+- TV short link: bit.ly (created by the user) -> `<live URL>/?role=frontoffice&screen=appointments` shows only the Receptionist login.
 - Sandbox customer names and number plates are kept.
 
 ## Open questions (for BU)

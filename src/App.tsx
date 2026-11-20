@@ -9,7 +9,7 @@ import { AppointmentsList } from "./screens/AppointmentsList";
 import { Login } from "./screens/Login";
 import { VehicleStatusList } from "./screens/VehicleStatusList";
 import { WorksManagerBoard } from "./screens/WorksManagerBoard";
-import { loadSession, readParams, saveSession, writeParams, type Role, type Session } from "./session";
+import { loadSession, readParams, saveSession, today, writeParams, type Role, type Session } from "./session";
 
 type FoScreen = "appointments" | "status";
 type DeptFilter = Dept | "ALL";
@@ -20,10 +20,17 @@ const asGroup = (v: string | null) => (v && BAY_GROUPS.some((g) => g.id === v) ?
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(loadSession);
-  const login = (role: Role, user: string) => { const s = { role, user }; saveSession(s); setSession(s); };
+  const login = (role: Role, user: string) => { const s = { role, user, day: today() }; saveSession(s); setSession(s); };
   const logout = () => { saveSession(null); setSession(null); history.replaceState(null, "", location.pathname); };
 
-  if (!session) return <Login onLogin={login} />;
+  // Once a day: after midnight the TV goes back to the login screen (the link and filters are kept).
+  useEffect(() => {
+    if (!session) return;
+    const t = setInterval(() => { if (!loadSession()) setSession(null); }, 60_000);
+    return () => clearInterval(t);
+  }, [session]);
+
+  if (!session) return <Login onLogin={login} onlyRole={initial.role === "frontoffice" || initial.role === "worksmanager" ? initial.role : undefined} />;
   return session.role === "worksmanager"
     ? <WorksManagerApp onSignOut={logout} />
     : <FrontOfficeApp onSignOut={logout} />;
@@ -58,7 +65,7 @@ function FrontOfficeApp({ onSignOut }: { onSignOut: () => void }) {
   const [countdown, setCountdown] = useState(TAB_SWITCH_SECONDS);
   const [sound, setSound] = useState(false);
 
-  useEffect(() => { writeParams({ screen, dept }); }, [screen, dept]);
+  useEffect(() => { writeParams({ role: "frontoffice", screen, dept }); }, [screen, dept]);
 
   useEffect(() => {
     if (!autoSwitch) return;
@@ -110,7 +117,7 @@ function WorksManagerApp({ onSignOut }: { onSignOut: () => void }) {
   const { snapshot, error, nextIn } = useSnapshot();
   const now = useNow(15_000);
   const [group, setGroup] = useState(asGroup(initial.group));
-  useEffect(() => { writeParams({ screen: "bays", group }); }, [group]);
+  useEffect(() => { writeParams({ role: "worksmanager", screen: "bays", group }); }, [group]);
 
   return (
     <Shell footer={<DataFooter nextIn={nextIn} error={error} />}>
