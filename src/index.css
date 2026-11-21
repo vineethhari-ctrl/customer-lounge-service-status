@@ -29,3 +29,7 @@
 .bay-border-alarm {
   animation: borderAlarm 1.3s infinite ease-in-out;
 }
+
+/* Workshop board (table view): blinking "Delayed" label */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.blink { animation: blink 1.2s ease-in-out infinite; }

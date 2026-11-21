@@ -17,6 +17,12 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Number plates shown as plain text (decorative "IND" plate graphic removed) on Vehicle Status and Works Manager.
 - Works Manager board otherwise unchanged.
 
+## Ready on branch `feature/workshop-board-table` (2026-11-21, waiting for go-live OK)
+- Workshop Board = table, one row per bay, per BU whiteboard: Bay | Technician | Vehicle | Start Plan | Start Actual | End Plan | End Actual | Elapsed | Job Status | Schedule.
+  Old tile/stepper Works Manager view replaced. Last two column names chosen by Claude (BU had not named them).
+- Bay group filter, summary counts, auto-paging, TV text scaling (this screen only). Uses `src/data` sandbox source (DMS-ready).
+- Note: board sample data comes from `src/data/mockSource.ts`, lounge screens still use the old sample list in `App.tsx`.
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).

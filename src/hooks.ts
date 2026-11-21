@@ -1,0 +1,68 @@
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { DMS_REFRESH_SECONDS, PAGE_SECONDS } from "./config";
+import { dataSource } from "./data/source";
+import type { Snapshot } from "./data/types";
+
+export function useNow(intervalMs = 1000): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(t);
+  }, [intervalMs]);
+  return now;
+}
+
+// Loads data now and every DMS_REFRESH_SECONDS. Returns the snapshot and seconds to next refresh.
+export function useSnapshot(): { snapshot: Snapshot | null; error: string | null; nextIn: number } {
+  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [nextIn, setNextIn] = useState(DMS_REFRESH_SECONDS);
+  useEffect(() => {
+    let alive = true;
+    const load = () =>
+      dataSource.fetchSnapshot(Date.now())
+        .then((s) => { if (alive) { setSnapshot(s); setError(null); } })
+        .catch((e) => { if (alive) setError(String(e)); });
+    load();
+    let left = DMS_REFRESH_SECONDS;
+    const t = setInterval(() => {
+      left -= 1;
+      if (left <= 0) { left = DMS_REFRESH_SECONDS; load(); }
+      setNextIn(left);
+    }, 1000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+  return { snapshot, error, nextIn };
+}
+
+// Measures how many table rows fit in the container, so TVs never need scrolling.
+export function useRowsThatFit(rowRem: number, headerRem: number) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [rows, setRows] = useState(10);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setRows(Math.max(3, Math.floor((el.clientHeight - headerRem * rem) / (rowRem * rem))));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [rowRem, headerRem]);
+  return { ref, rows };
+}
+
+// Rotates through pages of a list every PAGE_SECONDS.
+export function usePager<T>(items: T[], perPage: number) {
+  const pages = Math.max(1, Math.ceil(items.length / perPage));
+  const [page, setPage] = useState(0);
+  useEffect(() => {
+    if (pages <= 1) { setPage(0); return; }
+    const t = setInterval(() => setPage((p) => (p + 1) % pages), PAGE_SECONDS * 1000);
+    return () => clearInterval(t);
+  }, [pages]);
+  const current = Math.min(page, pages - 1);
+  return { pageItems: items.slice(current * perPage, current * perPage + perPage), page: current, pages };
+}
