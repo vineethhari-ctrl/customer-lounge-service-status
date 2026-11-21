@@ -17,10 +17,10 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Number plates shown as plain text (decorative "IND" plate graphic removed) on Vehicle Status and Works Manager.
 - Works Manager board otherwise unchanged.
 
-## Ready on branch `feature/workshop-board-table` (2026-11-21, waiting for go-live OK)
+## LIVE since 2026-11-21: Workshop Board table + shared data (from branch `feature/workshop-board-table`)
 - REFERENCE = the BU paper note only (user, 21 Nov): Bay | Technician | Vehicle | Start Plan | Start Actual | End Plan |
   Elapsed Time (current − actual start) | Status (Yet to start / WIP / Done) | Time (On time / Delayed). End Actual NOT shown.
-  Vehicle = number plate only. Sets: S1 = 5, S2 = 15, S3 = 11 (31 bays; "40 bays" circled on the paper, to confirm).
+  Vehicle = number plate only. Sets: S1 = 5, S2 = 15, S3 = 11 (31 bays; user: ignore the circled "40 bays").
   The whiteboard photo and "Next / Running" are NOT a reference any more. Old tile/stepper view replaced.
 - All screens share ONE data source (`src/data/source.ts` -> `mockSource.ts`, DMS later): same cars on Appointments, Vehicle Status
   and the Board. Old fixed sample lists removed from `App.tsx`; lounge screens convert the snapshot in `buildLoungeVehicles()`.
@@ -39,7 +39,6 @@ Full redesign from BU's whiteboard and notebook photos, waiting for the user's g
 - When resuming: rebase this branch on main (it also contains points 2–7 in its own way; keep the redesign's version).
 
 ## Open questions (for BU)
-- Real bay group names and counts (paper reads 5 / 15 / 11, but "40 bays" is circled).
 - Confirm the "Delayed" rule and the milestone list and logic.
 - DMS: which system, API access, how plan and actual times are recorded.
 - Is a real login needed, or is the once-a-day mock enough for TVs?

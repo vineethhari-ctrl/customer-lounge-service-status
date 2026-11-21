@@ -9,7 +9,7 @@ export interface BayGroup {
   bayCount: number;
 }
 
-// BU paper: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> 11" (and "40 bays" circled; to confirm).
+// BU paper: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> 11" (31 bays).
 // Departments per set are not on the paper; they only drive the sample data (Mechanical / Bodyshop).
 export const BAY_GROUPS: BayGroup[] = [
   { id: "S1", name: "S1", dept: "MECHANICAL", bayCount: 5 },
