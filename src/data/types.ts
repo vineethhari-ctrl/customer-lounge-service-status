@@ -39,6 +39,7 @@ export interface LoungeVehicle {
   customer: string;
   advisor: string;
   dept: Dept;
+  jobType: string;
   stage: number; // index into MILESTONES[dept]
   edt: number;   // estimated delivery time
 }

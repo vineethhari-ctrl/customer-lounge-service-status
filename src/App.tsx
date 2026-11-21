@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { WorksManagerScreen } from "./screens/WorksManagerScreen";
+import { MILESTONES } from "./config";
+import type { Snapshot } from "./data/types";
+import { useSnapshot } from "./hooks";
+import { loungeStatus } from "./logic";
 
 // BU: no car images anywhere in the portal.
 
@@ -46,6 +50,7 @@ export interface BodyshopEstimate {
 
 // Passenger Vehicle Database Record with Full BU Active Chip Telemetry
 export interface Vehicle {
+  edtMs?: number;              // estimated delivery time (epoch ms) from the shared data source
   id: string;
   numberTag: number; // 1, 2, 3 sequential badge
   regNo: string;
@@ -87,651 +92,6 @@ export interface Vehicle {
 }
 
 // 100% Passenger Vehicles (PV) - Mechanical & Bodyshop Fleets
-export const INITIAL_VEHICLES: Vehicle[] = [
-  // ================= MECHANICAL SERVICING VEHICLES =================
-  {
-    id: "V1",
-    numberTag: 1,
-    regNo: "UP81DJ6809",
-    model: "Safari",
-    fullModelName: "Tata Safari Dark Edition",
-    customer: "Rajesh K. Verma",
-    serviceAdvisor: "Rohit Malviya",
-    technicalSupervisor: "Parveen Vari",
-    technician: "Ramesh Sharma",
-    bayId: "BAY-01",
-    bayName: "Bay 01 - Heavy Repairs",
-    allocation: "Zone A - Bay 01 (RFID #TML-B01-4429)",
-    workType: "Running Repairs",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "04:30 PM",
-    ptd: "19 Oct 2026, 04:30 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "04:00 PM",
-    targetTime: "04:15 PM",
-    workStart: "09:15 AM",
-    workEnd: "04:10 PM",
-    qiStatus: "In Progress",
-    promiseTime: "2026/10/19 04:30 PM",
-    stageIndex: 2,
-    wmStageIndex: 4, // WIP in Mechanical
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "28,400 KM",
-    jobCard: "JC-TML-DEL-2324-004429",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004429",
-    vehCategory: "Premium SUV",
-    gateInDate: "19 Oct '26, 09:15 AM",
-    promisedDeliveryDate: "19 Oct '26, 04:30 PM"
-  },
-  {
-    id: "V2",
-    numberTag: 2,
-    regNo: "DL14CH2428",
-    model: "Harrier",
-    fullModelName: "Tata Harrier Fearless Red",
-    customer: "Sunita Aggarwal",
-    serviceAdvisor: "Saurabh Joshi",
-    technicalSupervisor: "Parveen Vari",
-    technician: "Sunil Verma",
-    bayId: "BAY-02",
-    bayName: "Bay 02 - Periodic Service",
-    allocation: "Zone A - Bay 02 (RFID #TML-B02-4812)",
-    workType: "Paid Service",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "05:15 PM",
-    ptd: "19 Oct 2026, 05:15 PM",
-    isPtdCrossed: true, // BU REQUIREMENT: PTD crossed, delayed status with blinking alert
-    plannedDate: "19 Oct 2026",
-    plannedTime: "04:55 PM",
-    targetTime: "04:55 PM",
-    workStart: "09:40 AM",
-    workEnd: "Est. 05:40 PM",
-    qiStatus: "Under QI",
-    promiseTime: "2026/10/19 05:15 PM",
-    stageIndex: 4,
-    wmStageIndex: 7, // Road Test
-    flightStatus: "DELAYED",
-    delayMinutes: 25, // Active delay beyond PTD
-    isWalkIn: false,
-    odometer: "38,200 KM",
-    jobCard: "JC-TML-DEL-2324-004812",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004812",
-    vehCategory: "Mid-Size SUV",
-    gateInDate: "19 Oct '26, 09:40 AM",
-    promisedDeliveryDate: "19 Oct '26, 05:15 PM"
-  },
-  {
-    id: "V3",
-    numberTag: 3,
-    regNo: "UP16CS7403",
-    model: "Nexon",
-    fullModelName: "Tata Nexon.ev Empowered",
-    customer: "Anand Deshmukh",
-    serviceAdvisor: "Imran Khan",
-    technicalSupervisor: "Sanjay Deshmukh",
-    technician: "Amit Saxena",
-    bayId: "BAY-03",
-    bayName: "Bay 03 - EV High Voltage",
-    allocation: "Zone B - Bay 03 (RFID #TML-B03-4645)",
-    workType: "Second Free Service",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "03:45 PM",
-    ptd: "19 Oct 2026, 03:45 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "03:30 PM",
-    targetTime: "03:30 PM",
-    workStart: "10:00 AM",
-    workEnd: "03:25 PM",
-    qiStatus: "Passed",
-    promiseTime: "2026/10/19 03:45 PM",
-    stageIndex: 3,
-    wmStageIndex: 5,
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "14,850 KM",
-    jobCard: "SR-TML-DEL-2324-004645",
-    badgeType: "blue",
-    badgeText: "SR-TML-DEL-2324-004645",
-    vehCategory: "Electric SUV",
-    gateInDate: "19 Oct '26, 10:00 AM",
-    promisedDeliveryDate: "19 Oct '26, 03:45 PM"
-  },
-  {
-    id: "V4",
-    numberTag: 4,
-    regNo: "UP14EJ9609",
-    model: "Curvv",
-    fullModelName: "Tata Curvv EV Coupe",
-    customer: "Rohan Verma",
-    serviceAdvisor: "Hemendra Chundawat",
-    technicalSupervisor: "Parveen Vari",
-    technician: "Vikas Yadav",
-    bayId: "BAY-04",
-    bayName: "Bay 04 - Express Bay (Walk-In)",
-    allocation: "Zone C - Bay 04 (RFID #TML-B04-4426)",
-    workType: "First Free Service",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "06:00 PM",
-    ptd: "19 Oct 2026, 06:00 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "05:30 PM",
-    targetTime: "05:30 PM",
-    workStart: "10:30 AM",
-    workEnd: "05:15 PM",
-    qiStatus: "In Progress",
-    promiseTime: "2026/10/19 06:00 PM",
-    stageIndex: 1,
-    wmStageIndex: 2,
-    flightStatus: "EXPEDITED",
-    delayMinutes: 0,
-    isWalkIn: true,
-    odometer: "4,500 KM",
-    jobCard: "JC-TML-DEL-2324-004426",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004426",
-    vehCategory: "Coupe SUV",
-    gateInDate: "19 Oct '26, 10:30 AM",
-    promisedDeliveryDate: "19 Oct '26, 06:00 PM"
-  },
-  {
-    id: "V5",
-    numberTag: 5,
-    regNo: "DL5CS0664",
-    model: "Punch",
-    fullModelName: "Tata Punch.ev Accomplished",
-    customer: "Vikramaditya Roy",
-    serviceAdvisor: "Praveen Nair",
-    technicalSupervisor: "Sanjay Deshmukh",
-    technician: "Manoj Tiwari",
-    bayId: "BAY-05",
-    bayName: "Bay 05 - Wheel Alignment",
-    allocation: "Zone D - Bay 05 (RFID #TML-B05-4810)",
-    workType: "First Free Service",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "02:00 PM",
-    ptd: "19 Oct 2026, 02:00 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "01:30 PM",
-    targetTime: "01:30 PM",
-    workStart: "08:30 AM",
-    workEnd: "01:45 PM",
-    qiStatus: "Passed",
-    promiseTime: "2026/10/19 02:00 PM",
-    stageIndex: 5,
-    wmStageIndex: 8,
-    flightStatus: "READY FOR PICKUP",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "12,340 KM",
-    jobCard: "JC-TML-DEL-2324-004810",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004810",
-    vehCategory: "Compact SUV",
-    gateInDate: "19 Oct '26, 08:30 AM",
-    promisedDeliveryDate: "19 Oct '26, 02:00 PM"
-  },
-  {
-    id: "V6",
-    numberTag: 6,
-    regNo: "MH01EK9921",
-    model: "Altroz",
-    fullModelName: "Tata Altroz Racer Edition",
-    customer: "Farhan Akhtar",
-    serviceAdvisor: "Naveen Kaushik",
-    technicalSupervisor: "Sanjay Deshmukh",
-    technician: "Deepak Kumar",
-    bayId: "BAY-06",
-    bayName: "Bay 06 - Washing & Final",
-    allocation: "Zone E - Bay 06 (RFID #TML-B06-4899)",
-    workType: "Running Repairs",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "05:45 PM",
-    ptd: "19 Oct 2026, 05:45 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "05:15 PM",
-    targetTime: "05:15 PM",
-    workStart: "11:15 AM",
-    workEnd: "05:00 PM",
-    qiStatus: "Pending",
-    promiseTime: "2026/10/19 05:45 PM",
-    stageIndex: 0,
-    wmStageIndex: 0,
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "21,100 KM",
-    jobCard: "SR-TML-DEL-2324-004899",
-    badgeType: "blue",
-    badgeText: "SR-TML-DEL-2324-004899",
-    vehCategory: "Premium Hatchback",
-    gateInDate: "19 Oct '26, 11:15 AM",
-    promisedDeliveryDate: "19 Oct '26, 05:45 PM"
-  },
-
-  // ================= BODYSHOP SERVICING VEHICLES =================
-  // BU Requirement: For Bodyshop servicing, milestone between Floor In and WIP called "Customer estimate approval"
-  {
-    id: "BS1",
-    numberTag: 7,
-    regNo: "HR26EM1008",
-    model: "Safari",
-    fullModelName: "Tata Safari Accomplished Stealth",
-    customer: "Rajeshwar Rao",
-    serviceAdvisor: "Vikram Rathore",
-    technicalSupervisor: "Rajan Kulkarni",
-    technician: "Mohan Lal (Frame Alignment)",
-    bayId: "BS-01",
-    bayName: "Bay BS-01 - Frame Alignment & Jig",
-    allocation: "Zone BS-A - Bay BS-01 (RFID #TML-BS01-9012)",
-    workType: "Accidental Bodyshop Repair",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹48,200",
-      insuranceProvider: "Tata AIG General Insurance",
-      approvalStatus: "Approved",
-      partsIncluded: ["Front Bumper Assembly", "LH Front Fender", "LED Headlamp Cluster", "Structural Apron Pulling"],
-      approvalDate: "19 Oct '26, 11:20 AM"
-    },
-    ptdDate: "20 Oct 2026",
-    ptdTime: "05:30 PM",
-    ptd: "20 Oct 2026, 05:30 PM",
-    isPtdCrossed: false,
-    plannedDate: "20 Oct 2026",
-    plannedTime: "05:00 PM",
-    targetTime: "05:00 PM",
-    workStart: "09:00 AM",
-    workEnd: "05:15 PM",
-    qiStatus: "In Progress",
-    promiseTime: "2026/10/20 05:30 PM",
-    stageIndex: 2,
-    wmStageIndex: 4, // Exactly at milestone: "Customer estimate approval"
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "31,400 KM",
-    jobCard: "JC-BS-DEL-2324-001201",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001201",
-    vehCategory: "Premium SUV",
-    gateInDate: "19 Oct '26, 08:45 AM",
-    promisedDeliveryDate: "20 Oct '26, 05:30 PM"
-  },
-  {
-    id: "BS2",
-    numberTag: 8,
-    regNo: "DL04CA6721",
-    model: "Harrier",
-    fullModelName: "Tata Harrier Fearless Sunlit Yellow",
-    customer: "Pooja Malhotra",
-    serviceAdvisor: "Vikram Rathore",
-    technicalSupervisor: "Rajan Kulkarni",
-    technician: "Kailash Chand (Panel Beating)",
-    bayId: "BS-02",
-    bayName: "Bay BS-02 - Panel Beating & Denting",
-    allocation: "Zone BS-B - Bay BS-02 (RFID #TML-BS02-9014)",
-    workType: "Denting & Painting",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹24,500",
-      insuranceProvider: "ICICI Lombard",
-      approvalStatus: "Approved",
-      partsIncluded: ["Rear Door Outer Skin", "Quarter Panel Beating", "Polyurethane Clear Coat"],
-      approvalDate: "19 Oct '26, 10:15 AM"
-    },
-    ptdDate: "19 Oct 2026",
-    ptdTime: "06:15 PM",
-    ptd: "19 Oct 2026, 06:15 PM",
-    isPtdCrossed: true, // Delayed Bodyshop Vehicle with blinking alert
-    plannedDate: "19 Oct 2026",
-    plannedTime: "05:45 PM",
-    targetTime: "05:45 PM",
-    workStart: "09:30 AM",
-    workEnd: "Est. 06:45 PM",
-    qiStatus: "Under QI",
-    promiseTime: "2026/10/19 06:15 PM",
-    stageIndex: 3,
-    wmStageIndex: 5, // WIP (post customer approval)
-    flightStatus: "DELAYED",
-    delayMinutes: 30, // 30m delay beyond PTD
-    isWalkIn: false,
-    odometer: "19,800 KM",
-    jobCard: "JC-BS-DEL-2324-001202",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001202",
-    vehCategory: "Mid-Size SUV",
-    gateInDate: "19 Oct '26, 09:10 AM",
-    promisedDeliveryDate: "19 Oct '26, 06:15 PM"
-  },
-  {
-    id: "BS3",
-    numberTag: 9,
-    regNo: "MH12PQ3344",
-    model: "Nexon",
-    fullModelName: "Tata Nexon Fearless Purple",
-    customer: "Arjun Singhal",
-    serviceAdvisor: "Amitabh Sen",
-    technicalSupervisor: "Dinesh Mehta",
-    technician: "Rakesh Pal (Prep Master)",
-    bayId: "BS-03",
-    bayName: "Bay BS-03 - Surface Prep & Primer",
-    allocation: "Zone BS-C - Bay BS-03 (RFID #TML-BS03-9018)",
-    workType: "Scratch & Dent Repair",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹16,800",
-      insuranceProvider: "HDFC ERGO General Insurance",
-      approvalStatus: "Awaiting Customer Approval", // Demonstrates Pending Customer Approval
-      partsIncluded: ["Front Bumper Full Paint", "Door Mirror Shell", "Primer Surfacer"],
-      approvalDate: "Pending Customer Call"
-    },
-    ptdDate: "19 Oct 2026",
-    ptdTime: "04:45 PM",
-    ptd: "19 Oct 2026, 04:45 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "04:15 PM",
-    targetTime: "04:15 PM",
-    workStart: "10:15 AM",
-    workEnd: "04:30 PM",
-    qiStatus: "Pending",
-    promiseTime: "2026/10/19 04:45 PM",
-    stageIndex: 2,
-    wmStageIndex: 4, // Exactly at milestone: "Customer estimate approval"
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "25,300 KM",
-    jobCard: "JC-BS-DEL-2324-001203",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001203",
-    vehCategory: "Compact SUV",
-    gateInDate: "19 Oct '26, 10:00 AM",
-    promisedDeliveryDate: "19 Oct '26, 04:45 PM"
-  },
-  {
-    id: "BS4",
-    numberTag: 10,
-    regNo: "UP16BQ9001",
-    model: "Curvv",
-    fullModelName: "Tata Curvv EV Pure Grey",
-    customer: "Nisha Singhania",
-    serviceAdvisor: "Amitabh Sen",
-    technicalSupervisor: "Dinesh Mehta",
-    technician: "Anand Swamy (Spray Master)",
-    bayId: "BS-04",
-    bayName: "Bay BS-04 - Heated Paint Booth",
-    allocation: "Zone BS-D - Bay BS-04 (RFID #TML-BS04-9022)",
-    workType: "Full Side Paint & Clear Coat",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹36,000",
-      insuranceProvider: "Bajaj Allianz",
-      approvalStatus: "Approved",
-      partsIncluded: ["Running Board Panel", "LH Front & Rear Door Paint", "High Solid Clear Coat"],
-      approvalDate: "19 Oct '26, 11:45 AM"
-    },
-    ptdDate: "19 Oct 2026",
-    ptdTime: "07:00 PM",
-    ptd: "19 Oct 2026, 07:00 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "06:30 PM",
-    targetTime: "06:30 PM",
-    workStart: "11:00 AM",
-    workEnd: "06:45 PM",
-    qiStatus: "In Progress",
-    promiseTime: "2026/10/19 07:00 PM",
-    stageIndex: 3,
-    wmStageIndex: 5, // WIP (Paint booth baking)
-    flightStatus: "EXPEDITED",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "8,900 KM",
-    jobCard: "JC-BS-DEL-2324-001204",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001204",
-    vehCategory: "Coupe SUV",
-    gateInDate: "19 Oct '26, 10:45 AM",
-    promisedDeliveryDate: "19 Oct '26, 07:00 PM"
-  },
-  {
-    id: "BS5",
-    numberTag: 11,
-    regNo: "DL01BZ4512",
-    model: "Punch",
-    fullModelName: "Tata Punch Daytona Grey",
-    customer: "Gaurav Kapoor",
-    serviceAdvisor: "Vikram Rathore",
-    technicalSupervisor: "Rajan Kulkarni",
-    technician: "Suresh Jha (Trim Assembler)",
-    bayId: "BS-05",
-    bayName: "Bay BS-05 - Reassembly & Trim",
-    allocation: "Zone BS-E - Bay BS-05 (RFID #TML-BS05-9025)",
-    workType: "Accidental Bodyshop Repair",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹28,900",
-      insuranceProvider: "Tata AIG General Insurance",
-      approvalStatus: "Approved",
-      partsIncluded: ["Radiator Support Assembly", "Grille & Chrome Insert", "Front Camera Recalibration"],
-      approvalDate: "18 Oct '26, 04:30 PM"
-    },
-    ptdDate: "19 Oct 2026",
-    ptdTime: "03:30 PM",
-    ptd: "19 Oct 2026, 03:30 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "03:00 PM",
-    targetTime: "03:00 PM",
-    workStart: "08:15 AM",
-    workEnd: "03:15 PM",
-    qiStatus: "Passed",
-    promiseTime: "2026/10/19 03:30 PM",
-    stageIndex: 4,
-    wmStageIndex: 7, // Floor Out / Ready for Detailing
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: true,
-    odometer: "15,200 KM",
-    jobCard: "JC-BS-DEL-2324-001205",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001205",
-    vehCategory: "Compact SUV",
-    gateInDate: "19 Oct '26, 08:00 AM",
-    promisedDeliveryDate: "19 Oct '26, 03:30 PM"
-  },
-  {
-    id: "BS6",
-    numberTag: 12,
-    regNo: "UP32EF8899",
-    model: "Altroz",
-    fullModelName: "Tata Altroz Opera Blue",
-    customer: "Shweta Tiwari",
-    serviceAdvisor: "Amitabh Sen",
-    technicalSupervisor: "Dinesh Mehta",
-    technician: "Kamal Hassan (Detailing)",
-    bayId: "BS-06",
-    bayName: "Bay BS-06 - Rubbing & Polishing",
-    allocation: "Zone BS-F - Bay BS-06 (RFID #TML-BS06-9028)",
-    workType: "Denting & Painting",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹12,400",
-      insuranceProvider: "Cash / Customer Paid",
-      approvalStatus: "Approved",
-      partsIncluded: ["Bonnet Rubbing & Buffing", "Ceramic Gloss Finishing"],
-      approvalDate: "19 Oct '26, 09:00 AM"
-    },
-    ptdDate: "19 Oct 2026",
-    ptdTime: "02:30 PM",
-    ptd: "19 Oct 2026, 02:30 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "02:00 PM",
-    targetTime: "02:00 PM",
-    workStart: "08:00 AM",
-    workEnd: "02:15 PM",
-    qiStatus: "Passed",
-    promiseTime: "2026/10/19 02:30 PM",
-    stageIndex: 5,
-    wmStageIndex: 9, // Road Test / Ready
-    flightStatus: "READY FOR PICKUP",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "27,600 KM",
-    jobCard: "JC-BS-DEL-2324-001206",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001206",
-    vehCategory: "Premium Hatchback",
-    gateInDate: "19 Oct '26, 07:45 AM",
-    promisedDeliveryDate: "19 Oct '26, 02:30 PM"
-  }
-];
-
-// Dedicated Next in Queue Vehicles with specific customer & model assignments
-export const QUEUE_VEHICLES: Vehicle[] = [
-  {
-    id: "Q1",
-    numberTag: 1,
-    regNo: "HR26DK5510",
-    model: "Safari",
-    fullModelName: "Tata Safari Accomplished Plus",
-    customer: "Deepak Chopra",
-    serviceAdvisor: "Hemendra Chundawat",
-    technicalSupervisor: "Parveen Vari",
-    technician: "Ramesh Sharma",
-    bayId: "BAY-01",
-    bayName: "Bay 01 - Heavy Repairs",
-    allocation: "Zone A - Staging Queue #01 (Chip #RFID-Q01)",
-    workType: "Paid Service",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "06:30 PM",
-    ptd: "19 Oct 2026, 06:30 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "06:00 PM",
-    targetTime: "06:00 PM",
-    workStart: "Pending",
-    workEnd: "Est. 06:15 PM",
-    qiStatus: "Pending",
-    promiseTime: "2026/10/19 06:30 PM",
-    stageIndex: 0,
-    wmStageIndex: 1,
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "44,200 KM",
-    jobCard: "JC-TML-DEL-2324-004901",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004901",
-    vehCategory: "Premium SUV",
-    gateInDate: "19 Oct '26, 11:30 AM",
-    promisedDeliveryDate: "19 Oct '26, 06:30 PM"
-  },
-  {
-    id: "Q2",
-    numberTag: 2,
-    regNo: "DL03CB8821",
-    model: "Harrier",
-    fullModelName: "Tata Harrier Adventure Plus",
-    customer: "Meenakshi Iyer",
-    serviceAdvisor: "Saurabh Joshi",
-    technicalSupervisor: "Parveen Vari",
-    technician: "Sunil Verma",
-    bayId: "BAY-02",
-    bayName: "Bay 02 - Periodic Service",
-    allocation: "Zone A - Staging Queue #02 (Chip #RFID-Q02)",
-    workType: "Running Repairs",
-    serviceDept: "MECHANICAL",
-    ptdDate: "19 Oct 2026",
-    ptdTime: "07:00 PM",
-    ptd: "19 Oct 2026, 07:00 PM",
-    isPtdCrossed: false,
-    plannedDate: "19 Oct 2026",
-    plannedTime: "06:30 PM",
-    targetTime: "06:30 PM",
-    workStart: "Pending",
-    workEnd: "Est. 06:45 PM",
-    qiStatus: "Pending",
-    promiseTime: "2026/10/19 07:00 PM",
-    stageIndex: 0,
-    wmStageIndex: 0,
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "22,600 KM",
-    jobCard: "JC-TML-DEL-2324-004933",
-    badgeType: "red",
-    badgeText: "JC-TML-DEL-2324-004933",
-    vehCategory: "Mid-Size SUV",
-    gateInDate: "19 Oct '26, 11:45 AM",
-    promisedDeliveryDate: "19 Oct '26, 07:00 PM"
-  },
-  {
-    id: "BS-Q1",
-    numberTag: 3,
-    regNo: "DL09CD1122",
-    model: "Harrier",
-    fullModelName: "Tata Harrier Dark Edition",
-    customer: "Manish Chawla",
-    serviceAdvisor: "Vikram Rathore",
-    technicalSupervisor: "Rajan Kulkarni",
-    technician: "Mohan Lal",
-    bayId: "BS-01",
-    bayName: "Bay BS-01 - Frame Alignment & Jig",
-    allocation: "Zone BS-A - Staging Queue #01 (Chip #RFID-BSQ01)",
-    workType: "Accidental Bodyshop Repair",
-    serviceDept: "BODYSHOP",
-    bodyshopEstimate: {
-      estimatedAmount: "₹55,000",
-      insuranceProvider: "Tata AIG General Insurance",
-      approvalStatus: "Under Review",
-      partsIncluded: ["Front Crossmember", "AC Condenser", "Front Subframe"],
-      approvalDate: "Awaiting Surveyor Inspection"
-    },
-    ptdDate: "20 Oct 2026",
-    ptdTime: "06:00 PM",
-    ptd: "20 Oct 2026, 06:00 PM",
-    isPtdCrossed: false,
-    plannedDate: "20 Oct 2026",
-    plannedTime: "05:30 PM",
-    targetTime: "05:30 PM",
-    workStart: "Pending",
-    workEnd: "Est. 05:45 PM",
-    qiStatus: "Pending",
-    promiseTime: "2026/10/20 06:00 PM",
-    stageIndex: 0,
-    wmStageIndex: 0,
-    flightStatus: "ON TIME",
-    delayMinutes: 0,
-    isWalkIn: false,
-    odometer: "18,400 KM",
-    jobCard: "JC-BS-DEL-2324-001210",
-    badgeType: "red",
-    badgeText: "JC-BS-DEL-2324-001210",
-    vehCategory: "Mid-Size SUV",
-    gateInDate: "19 Oct '26, 11:30 AM",
-    promisedDeliveryDate: "20 Oct '26, 06:00 PM"
-  }
-];
-
 // Service Status Pipeline Columns (Receptionist Table)
 const STATUS_STAGES = [
   { key: "received", label: "Vehicle Received" },
@@ -863,16 +223,42 @@ const fmtLong = (d: Date) => `${pad2(d.getDate())} ${MONTHS[d.getMonth()]} ${d.g
 const fmtShort = (d: Date) => `${pad2(d.getDate())} ${MONTHS[d.getMonth()]} '${String(d.getFullYear()).slice(2)}`;
 const fmtSlash = (d: Date) => `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`;
 
-// The sandbox data was written for 19 Oct 2026. Show it as "today" (and 20 Oct as "tomorrow")
-// so the today-only filter has something to show. Real data will come from the DMS.
-function rebaseToToday<T>(data: T): T {
-  const today = new Date();
-  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-  const json = JSON.stringify(data)
-    .split("19 Oct 2026").join(fmtLong(today)).split("20 Oct 2026").join(fmtLong(tomorrow))
-    .split("19 Oct '26").join(fmtShort(today)).split("20 Oct '26").join(fmtShort(tomorrow))
-    .split("2026/10/19").join(fmtSlash(today)).split("2026/10/20").join(fmtSlash(tomorrow));
-  return JSON.parse(json) as T;
+// All screens read the same data source (src/data/source.ts: sandbox now, DMS later).
+// The lounge screens still use their original Vehicle shape, so the snapshot is converted here.
+const fmt12 = (ms: number) => new Date(ms).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+const LOUNGE_STAGE_INDEX: Record<string, number> = {
+  "Gate In": 0, "Job Card": 1, "Estimate Approval": 1, "In Bay (WIP)": 2, "Washing": 3, "Ready for Delivery": 5,
+};
+function toLegacyVehicle(base: { regNo: string; model: string; customer: string; advisor: string; dept: ServiceDepartment; jobType: string }, slot: number, i: number): Vehicle {
+  const day = fmtShort(new Date(slot));
+  return {
+    id: `V-${base.regNo}`, numberTag: i + 1, regNo: base.regNo, model: base.model, fullModelName: `Tata ${base.model}`,
+    customer: base.customer, serviceAdvisor: base.advisor, technicalSupervisor: "", technician: "", bayId: "", bayName: "",
+    allocation: "", workType: base.jobType, serviceDept: base.dept, ptdDate: "", ptdTime: "", ptd: "", isPtdCrossed: false,
+    plannedDate: "", plannedTime: "", targetTime: "", workStart: "", workEnd: "", qiStatus: "Pending", promiseTime: "",
+    stageIndex: 0, wmStageIndex: 0, flightStatus: "ON TIME", delayMinutes: 0, isWalkIn: false, odometer: "", jobCard: "",
+    vehCategory: "", gateInDate: `${day}, ${fmt12(slot)}`, promisedDeliveryDate: "",
+  };
+}
+function buildLoungeVehicles(snapshot: Snapshot | null, now: number): { vehicles: Vehicle[]; queueVehicles: Vehicle[] } {
+  if (!snapshot) return { vehicles: [], queueVehicles: [] };
+  const slotByReg = new Map(snapshot.appointments.map((a) => [a.regNo, a.slot]));
+  const vehicles = snapshot.vehicles.map((lv, i) => {
+    const v = toLegacyVehicle(lv, slotByReg.get(lv.regNo) ?? lv.edt, i);
+    const status = loungeStatus(lv, now);
+    const lateMins = Math.max(0, Math.floor((now - lv.edt) / 60000));
+    v.stageIndex = LOUNGE_STAGE_INDEX[MILESTONES[lv.dept][lv.stage]] ?? 0;
+    v.flightStatus = status === "Ready" ? "READY FOR PICKUP" : status === "Delayed" ? "DELAYED" : "ON TIME";
+    v.isPtdCrossed = status === "Delayed";
+    v.delayMinutes = status === "Delayed" ? lateMins : 0;
+    v.edtMs = lv.edt;
+    v.ptdTime = fmt12(lv.edt);
+    return v;
+  });
+  const queueVehicles = snapshot.appointments
+    .filter((a) => a.arrivedAt === undefined)
+    .map((a, i) => toLegacyVehicle(a, a.slot, i));
+  return { vehicles, queueVehicles };
 }
 const isTodayLabel = (label: string) => label.startsWith(fmtShort(new Date())) || label.startsWith(fmtLong(new Date()));
 // "20 Nov '26, 09:15 AM" -> minutes since midnight (for sorting)
@@ -927,9 +313,9 @@ export default function App() {
   });
   // Works Manager View Mode: "bay" (Bay-wise Board requested by BU) or "pipeline" (Milestone Pipeline row view)
   const [wmViewMode, setWmViewMode] = useState<"bay" | "pipeline">("bay");
-  const [vehicles, setVehicles] = useState<Vehicle[]>(() => rebaseToToday(INITIAL_VEHICLES));
-  const [queueVehicles] = useState<Vehicle[]>(() => rebaseToToday(QUEUE_VEHICLES));
-  const [countdown, setCountdown] = useState<number>(20);
+  // Same data source as the Workshop Board (refreshes every 60 s).
+  const { snapshot, nextIn: countdown } = useSnapshot();
+  const { vehicles, queueVehicles } = buildLoungeVehicles(snapshot, snapshot?.fetchedAt ?? Date.now());
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -986,77 +372,17 @@ export default function App() {
     } catch {}
   };
 
-  // 20-Second Refresh Countdown Engine
+  // Chime when a vehicle becomes ready for delivery (new data arrives every 60 s).
+  const readyRegs = useRef<Set<string> | null>(null);
   useEffect(() => {
-    if (!currentUser) return;
+    if (!snapshot) return;
+    const ready = new Set(vehicles.filter((v) => v.flightStatus === "READY FOR PICKUP").map((v) => v.regNo));
+    if (readyRegs.current && [...ready].some((r) => !readyRegs.current!.has(r))) playAirportChime();
+    readyRegs.current = ready;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshot]);
 
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          playAirportChime();
-          setVehicles((prevV) => {
-            const next = [...prevV];
-            const randIdx = Math.floor(Math.random() * next.length);
-            if (next[randIdx].stageIndex < STATUS_STAGES.length - 1) {
-              const nextStage = next[randIdx].stageIndex + 1;
-              const nextWmStage = Math.min(next[randIdx].wmStageIndex + 1, WM_PIPELINE_STAGES.length - 1);
-              next[randIdx] = {
-                ...next[randIdx],
-                stageIndex: nextStage,
-                wmStageIndex: nextWmStage,
-                flightStatus: nextStage === STATUS_STAGES.length - 1 ? "READY FOR PICKUP" : next[randIdx].flightStatus
-              };
-            }
-            return next;
-          });
-          return 20;
-        }
-        return prev - 1;
-      });
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [currentUser, soundEnabled]);
-
-  const advanceVehicleMilestone = (id: string) => {
-    setVehicles((prev) => prev.map((v) => {
-      if (v.id === id) {
-        const stages = getPipelineStages(v.serviceDept);
-        const nextWmIdx = (v.wmStageIndex + 1) % stages.length;
-        const nextStageIdx = Math.min(
-          STATUS_STAGES.length - 1,
-          Math.floor((nextWmIdx / (stages.length - 1)) * (STATUS_STAGES.length - 1))
-        );
-        const isReady = nextWmIdx >= stages.length - 2;
-        return {
-          ...v,
-          wmStageIndex: nextWmIdx,
-          stageIndex: nextStageIdx,
-          flightStatus: isReady ? "READY FOR PICKUP" : (v.flightStatus === "DELAYED" ? "DELAYED" : "ON TIME"),
-          qiStatus: nextWmIdx >= stages.length - 2 ? "Passed" : (nextWmIdx === stages.length - 3 ? "Under QI" : v.qiStatus)
-        };
-      }
-      return v;
-    }));
-  };
-
-  const toggleEstimateApproval = (id: string) => {
-    setVehicles((prev) => prev.map((v) => {
-      if (v.id === id && v.bodyshopEstimate) {
-        const isApproved = v.bodyshopEstimate.approvalStatus === "Approved";
-        const newStatus: "Approved" | "Awaiting Customer Approval" = isApproved ? "Awaiting Customer Approval" : "Approved";
-        return {
-          ...v,
-          bodyshopEstimate: {
-            ...v.bodyshopEstimate,
-            approvalStatus: newStatus,
-            approvalDate: newStatus === "Approved" ? "Customer Approved Just Now" : "Pending Sign-off"
-          }
-        };
-      }
-      return v;
-    }));
-  };
 
   const [delayElapsedSeconds, setDelayElapsedSeconds] = useState<number>(0);
 
@@ -1084,7 +410,9 @@ export default function App() {
 
     // Base delay in minutes from vehicle profile (defaults to 25m for delayed vehicle)
     const baseMins = v.delayMinutes && v.delayMinutes > 0 ? v.delayMinutes : 25;
-    const totalSecs = (baseMins * 60) + delayElapsedSeconds;
+    const totalSecs = v.edtMs !== undefined
+      ? Math.max(0, Math.floor((currentTime.getTime() - v.edtMs) / 1000))
+      : (baseMins * 60) + delayElapsedSeconds;
     const liveMins = Math.floor(totalSecs / 60);
     const liveSecs = totalSecs % 60;
     const secStr = liveSecs.toString().padStart(2, "0");
@@ -1122,38 +450,7 @@ export default function App() {
     };
   };
 
-  // Adjust delay time on demand (+5m, -5m) with immediate live update
-  const adjustVehicleDelay = (id: string, deltaMinutes: number) => {
-    setVehicles((prev) => prev.map((v) => {
-      if (v.id === id) {
-        const currentMins = v.delayMinutes ?? 25;
-        const newMins = Math.max(5, currentMins + deltaMinutes);
-        return {
-          ...v,
-          flightStatus: "DELAYED",
-          isPtdCrossed: true,
-          delayMinutes: newMins
-        };
-      }
-      return v;
-    }));
-  };
 
-  // BU Testing & Simulation: Toggle between DELAYED / PTD CROSSED and ON TIME
-  const toggleVehicleDelay = (id: string) => {
-    setVehicles((prev) => prev.map((v) => {
-      if (v.id === id) {
-        const willBeDelayed = !(v.flightStatus === "DELAYED" || v.isPtdCrossed);
-        return {
-          ...v,
-          flightStatus: willBeDelayed ? "DELAYED" : "ON TIME",
-          isPtdCrossed: willBeDelayed,
-          delayMinutes: willBeDelayed ? (v.delayMinutes || 25) : 0,
-        };
-      }
-      return v;
-    }));
-  };
 
   // Indian Number Plate badge with authentic IND blue strip
   // BU Requirement: Current status with color, and BLINK if delayed or PTD crossed (showing live ticking delay)

@@ -21,7 +21,10 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Workshop Board = table, one row per bay, per BU whiteboard: Bay | Technician | Vehicle | Start Plan | Start Actual | End Plan | End Actual | Elapsed | Job Status | Schedule.
   Old tile/stepper Works Manager view replaced. Last two column names chosen by Claude (BU had not named them).
 - Bay group filter, summary counts, auto-paging, TV text scaling (this screen only). Uses `src/data` sandbox source (DMS-ready).
-- Note: board sample data comes from `src/data/mockSource.ts`, lounge screens still use the old sample list in `App.tsx`.
+- All screens share ONE data source (`src/data/source.ts` -> `mockSource.ts`, DMS later): same cars on Appointments, Vehicle Status
+  and the Board. Old fixed sample lists removed from `App.tsx`; lounge screens convert the snapshot in `buildLoungeVehicles()`.
+  Vehicle Status shows arrived cars only; bay bookings whose car has not arrived show as "Expected" in Appointments.
+  Bodyshop estimate amounts are no longer shown (not in the shared data yet).
 
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:

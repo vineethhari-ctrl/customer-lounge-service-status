@@ -2,7 +2,7 @@
 // moves jobs forward on every refresh, so the screens look live without a DMS.
 // All names and number plates are sandbox data.
 import { BAY_GROUPS, MILESTONES, type Dept } from "../config";
-import type { Appointment, Bay, BayJob, DataSource, LoungeVehicle, Snapshot } from "./types";
+import type { Bay, BayJob, DataSource, LoungeVehicle, Snapshot } from "./types";
 
 const MIN = 60_000;
 
@@ -45,9 +45,18 @@ const TECHNICIANS = [
 const ADVISORS = ["Rohit Malviya", "Saurabh Joshi", "Imran Khan", "Hemendra Chundawat", "Praveen Nair", "Naveen Kaushik", "Vikram Rathore", "Amitabh Sen"];
 const STATES = ["DL", "HR", "UP", "MH", "RJ", "PB"];
 
-interface InternalJob extends BayJob {
-  dept: Dept;
+// One customer vehicle visiting the workshop today. Every screen is built from this one list,
+// so the same car shows on Appointments, Vehicle Status and the Workshop Board.
+interface Visit {
+  regNo: string;
+  model: string;
+  customer: string;
   advisor: string;
+  dept: Dept;
+  jobType: string;
+  slot: number;            // appointment time
+  arrivedAt?: number;      // gate-in time
+  job?: BayJob;            // bay allocation and plan/actual times (if allocated)
   estimatePending: boolean; // bodyshop only: customer has not approved the estimate yet
 }
 
@@ -68,9 +77,7 @@ export function createMockSource(seed = 20261120): DataSource {
   const nextCustomer = () => CUSTOMERS[custIdx++ % CUSTOMERS.length];
 
   let bays: Bay[] = [];
-  let jobs: InternalJob[] = [];
-  let extraGateIn: LoungeVehicle[] = [];
-  let appointments: Appointment[] = [];
+  let visits: Visit[] = [];
   let initialised = false;
 
   function init(now: number) {
@@ -82,93 +89,103 @@ export function createMockSource(seed = 20261120): DataSource {
       }),
     );
 
-    jobs = [];
-    for (const bay of bays) {
-      if (rnd() < 0.12) continue; // free bay
-      const isBody = bay.dept === "BODYSHOP";
-      const dur = round(isBody ? between(120, 300) * MIN : between(60, 180) * MIN, 15);
-      const base = {
-        bayId: bay.id, dept: bay.dept, regNo: nextReg(), model: pick(MODELS),
-        jobType: pick(isBody ? BODY_JOBS : MECH_JOBS), customer: nextCustomer(), advisor: pick(ADVISORS),
-        estimatePending: false,
-      };
-      const p = rnd();
-      if (p < 0.25) {
-        const actualEnd = now - between(5, 90) * MIN;
-        const actualStart = actualEnd - dur * between(0.75, 1.1);
-        const planStart = round(actualStart - between(0, 10) * MIN, 5);
-        jobs.push({ ...base, planStart, planEnd: planStart + dur, actualStart, actualEnd });
-      } else if (p < 0.7) {
-        const actualStart = now - between(10, dur / MIN + 40) * MIN;
-        const planStart = round(actualStart - between(-10, 25) * MIN, 5);
-        jobs.push({ ...base, planStart, planEnd: planStart + dur, actualStart });
-      } else {
-        const planStart = round(now + between(-30, 120) * MIN, 15);
-        jobs.push({ ...base, planStart, planEnd: planStart + dur, estimatePending: isBody && rnd() < 0.5 });
-      }
-    }
-
-    extraGateIn = Array.from({ length: 3 }, () => {
-      const dept: Dept = rnd() < 0.7 ? "MECHANICAL" : "BODYSHOP";
-      return {
-        regNo: nextReg(), model: pick(MODELS), customer: nextCustomer(), advisor: pick(ADVISORS),
-        dept, stage: 0, edt: round(now + between(180, 360) * MIN, 15),
-      };
+    const newVisit = (dept: Dept): Omit<Visit, "slot"> => ({
+      regNo: nextReg(), model: pick(MODELS), customer: nextCustomer(), advisor: pick(ADVISORS), dept,
+      jobType: pick(dept === "BODYSHOP" ? BODY_JOBS : MECH_JOBS), estimatePending: false,
     });
 
-    const day = new Date(now);
-    day.setHours(9, 0, 0, 0);
-    appointments = [];
-    for (let i = 0; i < 25; i++) {
-      if (rnd() < 0.12) continue;
-      const slot = day.getTime() + i * 20 * MIN;
-      const dept: Dept = rnd() < 0.75 ? "MECHANICAL" : "BODYSHOP";
-      const arrived = slot < now && rnd() < 0.85;
-      appointments.push({
-        id: `A${i + 1}`, slot, regNo: nextReg(), model: pick(MODELS), customer: nextCustomer(),
-        advisor: pick(ADVISORS), dept, jobType: pick(dept === "BODYSHOP" ? BODY_JOBS : MECH_JOBS),
-        arrivedAt: arrived ? Math.min(now, slot + between(-15, 20) * MIN) : undefined,
-      });
+    visits = [];
+    // Vehicles allocated to a bay.
+    for (const bay of bays) {
+      if (rnd() < 0.12) continue; // free bay
+      const v = newVisit(bay.dept);
+      const isBody = bay.dept === "BODYSHOP";
+      const dur = round(isBody ? between(120, 300) * MIN : between(60, 180) * MIN, 15);
+      const job: BayJob = { bayId: bay.id, regNo: v.regNo, model: v.model, jobType: v.jobType, customer: v.customer, planStart: 0, planEnd: 0 };
+      const p = rnd();
+      if (p < 0.25) { // done
+        job.actualEnd = now - between(5, 90) * MIN;
+        job.actualStart = job.actualEnd - dur * between(0.75, 1.1);
+        job.planStart = round(job.actualStart - between(0, 10) * MIN, 5);
+      } else if (p < 0.7) { // in progress
+        job.actualStart = now - between(10, dur / MIN + 40) * MIN;
+        job.planStart = round(job.actualStart - between(-10, 25) * MIN, 5);
+      } else { // yet to start
+        job.planStart = round(now + between(-30, 120) * MIN, 15);
+      }
+      job.planEnd = job.planStart + dur;
+      const firstWork = job.actualStart ?? job.planStart;
+      const slot = round(firstWork - between(20, 60) * MIN, 5);
+      let arrivedAt: number | undefined;
+      if (job.actualStart !== undefined) arrivedAt = Math.min(slot + between(-10, 10) * MIN, job.actualStart - 5 * MIN);
+      else if (slot <= now) arrivedAt = Math.min(now, slot + between(-10, 10) * MIN);
+      visits.push({ ...v, slot, arrivedAt, job, estimatePending: isBody && job.actualStart === undefined && rnd() < 0.5 });
+    }
+    // Arrived, waiting for a bay.
+    for (let i = 0; i < 3; i++) {
+      const v = newVisit(rnd() < 0.7 ? "MECHANICAL" : "BODYSHOP");
+      const slot = round(now - between(10, 40) * MIN, 5);
+      visits.push({ ...v, slot, arrivedAt: Math.min(now, slot + between(-5, 10) * MIN) });
+    }
+    // Appointments later today (not arrived yet, no bay yet).
+    for (let i = 0; i < 6; i++) {
+      const v = newVisit(rnd() < 0.75 ? "MECHANICAL" : "BODYSHOP");
+      visits.push({ ...v, slot: round(now + between(20, 300) * MIN, 15) });
     }
     initialised = true;
   }
 
-  // Each refresh: some due jobs start, some running jobs finish, some appointments arrive.
+  // Each refresh: vehicles arrive, due jobs start (only once the vehicle is here), running jobs finish.
   function simulate(now: number) {
-    for (const j of jobs) {
+    for (const v of visits) {
+      if (v.arrivedAt === undefined && v.slot <= now + 10 * MIN && rnd() < 0.3) v.arrivedAt = now;
+      const j = v.job;
+      if (!j || v.arrivedAt === undefined) continue;
       if (j.actualStart === undefined) {
-        if (j.estimatePending && rnd() < 0.2) j.estimatePending = false;
-        if (!j.estimatePending && j.planStart <= now && rnd() < 0.5) j.actualStart = now;
+        if (v.estimatePending && rnd() < 0.2) v.estimatePending = false;
+        if (!v.estimatePending && j.planStart <= now && rnd() < 0.5) j.actualStart = now;
       } else if (j.actualEnd === undefined && now >= j.planEnd - 10 * MIN && rnd() < 0.35) {
         j.actualEnd = now;
       }
     }
-    for (const a of appointments) {
-      if (!a.arrivedAt && a.slot <= now + 10 * MIN && rnd() < 0.3) a.arrivedAt = now;
-    }
   }
 
-  function toLounge(j: InternalJob, now: number): LoungeVehicle {
-    const stages = MILESTONES[j.dept];
+  function toLounge(v: Visit, now: number): LoungeVehicle {
+    const stages = MILESTONES[v.dept];
     const idx = (name: string) => stages.indexOf(name);
+    const j = v.job;
     let stage: number;
-    if (j.actualEnd !== undefined) stage = now - j.actualEnd < 40 * MIN ? idx("Washing") : idx("Ready for Delivery");
+    if (!j) stage = idx("Gate In");
+    else if (j.actualEnd !== undefined) stage = now - j.actualEnd < 40 * MIN ? idx("Washing") : idx("Ready for Delivery");
     else if (j.actualStart !== undefined) stage = idx("In Bay (WIP)");
-    else stage = j.estimatePending ? idx("Estimate Approval") : idx("Job Card");
-    const edt = Math.ceil((j.planEnd + 45 * MIN) / (15 * MIN)) * 15 * MIN;
-    return { regNo: j.regNo, model: j.model, customer: j.customer, advisor: j.advisor, dept: j.dept, stage, edt };
+    else stage = v.estimatePending ? idx("Estimate Approval") : idx("Job Card");
+    const edt = j
+      ? Math.ceil((j.planEnd + 45 * MIN) / (15 * MIN)) * 15 * MIN
+      : round((v.arrivedAt ?? v.slot) + between(240, 360) * MIN, 15);
+    return { regNo: v.regNo, model: v.model, customer: v.customer, advisor: v.advisor, dept: v.dept, jobType: v.jobType, stage, edt };
   }
+
+  // EDT of vehicles without a bay is fixed once, so it does not jump on every refresh.
+  const fixedEdt = new Map<string, number>();
 
   return {
     name: "Sandbox data",
     async fetchSnapshot(now: number): Promise<Snapshot> {
       if (!initialised) init(now);
       else simulate(now);
+      const arrived = visits.filter((v) => v.arrivedAt !== undefined);
       return {
         bays: bays.map((b) => ({ ...b })),
-        jobs: jobs.map(({ dept: _d, advisor: _a, estimatePending: _e, ...j }) => ({ ...j })),
-        appointments: appointments.map((a) => ({ ...a })),
-        vehicles: [...jobs.map((j) => toLounge(j, now)), ...extraGateIn.map((v) => ({ ...v }))],
+        jobs: visits.filter((v) => v.job).map((v) => ({ ...v.job! })),
+        appointments: visits.map((v, i) => ({
+          id: `A${i + 1}`, slot: v.slot, regNo: v.regNo, model: v.model, customer: v.customer,
+          advisor: v.advisor, dept: v.dept, jobType: v.jobType, arrivedAt: v.arrivedAt,
+        })),
+        vehicles: arrived.map((v) => {
+          const lv = toLounge(v, now);
+          if (!v.job) { if (!fixedEdt.has(v.regNo)) fixedEdt.set(v.regNo, lv.edt); lv.edt = fixedEdt.get(v.regNo)!; }
+          return lv;
+        }),
         fetchedAt: now,
       };
     },
