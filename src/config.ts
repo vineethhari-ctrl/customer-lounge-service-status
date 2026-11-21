@@ -9,12 +9,12 @@ export interface BayGroup {
   bayCount: number;
 }
 
-// BU note: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> ..., 40 bays".
-// Assumption: 40 bays in total, so S3 = 20. Group names and departments are placeholders.
+// BU paper: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> 11" (and "40 bays" circled; to confirm).
+// Departments per set are not on the paper; they only drive the sample data (Mechanical / Bodyshop).
 export const BAY_GROUPS: BayGroup[] = [
-  { id: "S1", name: "Set 1 · Express", dept: "MECHANICAL", bayCount: 5 },
-  { id: "S2", name: "Set 2 · Mechanical", dept: "MECHANICAL", bayCount: 15 },
-  { id: "S3", name: "Set 3 · Bodyshop", dept: "BODYSHOP", bayCount: 20 },
+  { id: "S1", name: "S1", dept: "MECHANICAL", bayCount: 5 },
+  { id: "S2", name: "S2", dept: "MECHANICAL", bayCount: 15 },
+  { id: "S3", name: "S3", dept: "BODYSHOP", bayCount: 11 },
 ];
 
 // Customer-facing milestones (BU: "remove RO, promise date; add Washing").

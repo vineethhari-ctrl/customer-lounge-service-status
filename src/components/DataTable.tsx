@@ -9,7 +9,7 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
 }
 
-const ROW_REM = 3.1;
+const ROW_REM = 2.6;
 const CHROME_REM = 5.5; // table header + footer
 
 // TV-friendly table: rows always fit the screen; extra rows are shown page by page.

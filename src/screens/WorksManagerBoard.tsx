@@ -27,21 +27,19 @@ export function WorksManagerBoard({ snapshot, now, group }: { snapshot: Snapshot
       <div className="leading-tight"><div className="text-[1.15rem] font-bold text-white">{r.bay.id}</div>
         <div className="text-[0.7rem] text-slate-500">{groupName(r.bay.groupId)}</div></div>) },
     { key: "tech", header: "Technician", width: "w-[13%]", render: (r) => <span className="text-slate-200">{r.bay.technician}</span> },
-    { key: "veh", header: "Vehicle", width: "w-[17.5%]", render: (r) => r.job ? (
-      <div className="leading-tight"><div className="font-mono text-[1.1rem] font-bold text-white">{r.job.regNo}</div>
-        <div className="truncate text-[0.75rem] text-slate-400">{r.job.model} · {r.job.jobType}</div></div>
-    ) : <span className="italic text-slate-500">Bay free</span> },
-    { key: "ps", header: <>Start<br /><span className="text-slate-500">Plan</span></>, width: "w-[6.5%]", className: "font-mono", render: (r) => r.job ? fmtTime(r.job.planStart) : dash },
-    { key: "as", header: <>Start<br /><span className="text-slate-500">Actual</span></>, width: "w-[6.5%]", className: "font-mono", render: (r) => r.job?.actualStart ? <span className="text-white">{fmtTime(r.job.actualStart)}</span> : dash },
-    { key: "pe", header: <>End<br /><span className="text-slate-500">Plan</span></>, width: "w-[6.5%]", className: "font-mono", render: (r) => r.job ? fmtTime(r.job.planEnd) : dash },
-    { key: "ae", header: <>End<br /><span className="text-slate-500">Actual</span></>, width: "w-[6.5%]", className: "font-mono", render: (r) => r.job?.actualEnd ? <span className="text-white">{fmtTime(r.job.actualEnd)}</span> : dash },
-    { key: "el", header: "Elapsed", width: "w-[8%]", className: "font-mono", render: (r) => r.job && r.job.actualStart ? fmtDuration(elapsedMs(r.job, now)) : dash },
-    { key: "st", header: "Job Status", width: "w-[11%]", render: (r) => {
+    { key: "veh", header: "Vehicle", width: "w-[15%]", render: (r) => r.job
+      ? <span className="font-mono text-[1.15rem] font-bold text-white">{r.job.regNo}</span>
+      : <span className="italic text-slate-500">Bay free</span> },
+    { key: "ps", header: <>Start<br /><span className="text-slate-500">Plan</span></>, width: "w-[8%]", className: "font-mono", render: (r) => r.job ? fmtTime(r.job.planStart) : dash },
+    { key: "as", header: <>Start<br /><span className="text-slate-500">Actual</span></>, width: "w-[8%]", className: "font-mono", render: (r) => r.job?.actualStart ? <span className="text-white">{fmtTime(r.job.actualStart)}</span> : dash },
+    { key: "pe", header: <>End<br /><span className="text-slate-500">Plan</span></>, width: "w-[8%]", className: "font-mono", render: (r) => r.job ? fmtTime(r.job.planEnd) : dash },
+    { key: "el", header: <>Elapsed<br />Time</>, width: "w-[10%]", className: "font-mono", render: (r) => r.job && r.job.actualStart ? fmtDuration(elapsedMs(r.job, now)) : dash },
+    { key: "st", header: "Status", width: "w-[12%]", render: (r) => {
       if (!r.job) return dash;
       const s = bayStatus(r.job);
       return <Pill tone={s === "WIP" ? "blue" : s === "Done" ? "done" : "slate"}>{s === "Done" ? "✓ Done" : s}</Pill>;
     } },
-    { key: "tm", header: "Schedule", width: "w-[12.5%]", render: (r) => {
+    { key: "tm", header: "Time", width: "w-[13%]", render: (r) => {
       if (!r.job) return dash;
       const t = timeStatus(r.job, now);
       const live = bayStatus(r.job) !== "Done";
