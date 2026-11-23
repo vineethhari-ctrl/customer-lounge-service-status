@@ -48,6 +48,18 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Lounge top bar kept on one line (long lounge name shortens with "..."). Vehicle Status stage headers on two lines.
 - Test lesson: count rows that are VISIBLE (inside the window), step through pages, pause the lounge auto-switch while measuring.
 
+## Branch `fix/works-without-browser-storage` (2026-11-23, waiting for go-live OK)
+- Report: "the HTML does not work for others". Found and fixed (reproduced first):
+  1. Login did nothing when the browser blocks site storage (localStorage throws) -> now falls back to memory.
+  2. Live `index.html` still loaded `cdn.tailwindcss.com` (not needed; a blocked CDN can stall start-up) -> removed.
+  3. Blank page on failure -> now readable messages: scripts off (`noscript`), very old browser (`nomodule`), app not started after 5 s,
+     and an error screen with the reason if the app crashes (`ErrorBoundary` in `main.tsx`).
+  4. Phones/tablets showed a squeezed, unreadable layout -> `viewport width=1280` shows the normal layout scaled to fit.
+  5. Small laptops: lounge top bar hides the long name / user badge below 1400 px (it overlapped the tabs).
+- Standalone file: build `dist/`, inline JS and CSS into one HTML (see `share/`, not committed). Not verified: Firefox / Safari (only Chromium here),
+  corporate content-security policies that block inline scripts, email/chat previews (they usually run no scripts).
+- Hosting: github.io is blocked on the user's network ("access denied"); a company-internal host is the lasting fix.
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).

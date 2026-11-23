@@ -264,16 +264,26 @@ function buildLoungeVehicles(snapshot: Snapshot | null, now: number): Vehicle[] 
 // Log in once a day: the login is kept on this device until midnight.
 type PortalUser = { role: "Receptionist" | "WorksManager"; name: string; username: string };
 const SESSION_KEY = "tml-service-status-daily-login";
+// Some browsers block site storage (company-managed profiles, in-app viewers, private modes). The login must still work
+// there: fall back to memory (the login then lasts until the page is reloaded).
+let memoryLogin: { user: PortalUser; day: string } | null = null;
 function loadDailyUser(): PortalUser | null {
+  const today = fmtSlash(new Date());
   try {
     const saved = JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null");
-    if (!saved || saved.day !== fmtSlash(new Date())) { localStorage.removeItem(SESSION_KEY); return null; }
-    return saved.user as PortalUser;
-  } catch { return null; }
+    if (saved && saved.day === today) return saved.user as PortalUser;
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  } catch {
+    return memoryLogin && memoryLogin.day === today ? memoryLogin.user : null;
+  }
 }
 function saveDailyUser(user: PortalUser | null) {
-  if (user) localStorage.setItem(SESSION_KEY, JSON.stringify({ user, day: fmtSlash(new Date()) }));
-  else localStorage.removeItem(SESSION_KEY);
+  memoryLogin = user ? { user, day: fmtSlash(new Date()) } : null;
+  try {
+    if (user) localStorage.setItem(SESSION_KEY, JSON.stringify(memoryLogin));
+    else localStorage.removeItem(SESSION_KEY);
+  } catch { /* storage blocked or full: the in-memory login is used */ }
 }
 // TV / bit.ly link: ?role=frontoffice shows only the Receptionist login.
 const LOGIN_ROLE = new URLSearchParams(window.location.search).get("role");

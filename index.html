@@ -2,13 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tata Motors TMSA-CV Workshop Portal & Customer Lounge</title>
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=1280" />
+    <title>Tata Motors Workshop Service Status</title>
   </head>
-  <body class="bg-slate-100 text-slate-800 antialiased">
+  <body style="margin:0;background:#0b1730">
     <div id="root"></div>
+    <noscript><p style="padding:32px;font-family:system-ui,sans-serif;color:#e2e8f0">This page needs JavaScript. Please turn JavaScript on in your browser (or open the file in Chrome or Edge).</p></noscript>
+    <script nomodule>document.getElementById('root').innerHTML='<p style="padding:32px;font-family:system-ui,sans-serif;color:#e2e8f0">This browser is too old for this page. Please open it in a current Chrome, Edge, Firefox or Safari.</p>';</script>
+    <script>
+      // If the app has not started after 5 seconds, say so instead of showing a blank page.
+      setTimeout(function () {
+        var r = document.getElementById('root');
+        if (r && !r.hasChildNodes()) r.innerHTML = '<p style="padding:32px;font-family:system-ui,sans-serif;color:#e2e8f0">The page did not start. Please open it in a current Chrome or Edge, and make sure scripts are allowed (company security settings or an email / chat preview can block them). Try saving the file to your computer first and opening it from there.</p>';
+      }, 5000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

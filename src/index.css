@@ -39,3 +39,7 @@
 .lounge-header { gap: 0.75rem; }
 .lounge-header > div:first-child { min-width: 0; flex-shrink: 1; }
 .lounge-header > div:first-child > span:nth-child(3) { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Narrow screens (small laptops, phones/tablets shown at 1280 px): drop the long lounge name and the user badge */
+@media (max-width: 1400px) {
+  .lounge-header > div:first-child > span:nth-child(n+2) { display: none; }
+}
