@@ -3,7 +3,7 @@ import { WorksManagerScreen } from "./screens/WorksManagerScreen";
 import { MILESTONES } from "./config";
 import type { Snapshot } from "./data/types";
 import { useSnapshot } from "./hooks";
-import { loungeStatus } from "./logic";
+import { appointmentStatus, isSameDay, loungeStatus } from "./logic";
 
 // BU: no car images anywhere in the portal.
 
@@ -240,8 +240,8 @@ function toLegacyVehicle(base: { regNo: string; model: string; customer: string;
     vehCategory: "", gateInDate: `${day}, ${fmt12(slot)}`, promisedDeliveryDate: "",
   };
 }
-function buildLoungeVehicles(snapshot: Snapshot | null, now: number): { vehicles: Vehicle[]; queueVehicles: Vehicle[] } {
-  if (!snapshot) return { vehicles: [], queueVehicles: [] };
+function buildLoungeVehicles(snapshot: Snapshot | null, now: number): Vehicle[] {
+  if (!snapshot) return [];
   const slotByReg = new Map(snapshot.appointments.map((a) => [a.regNo, a.slot]));
   const vehicles = snapshot.vehicles.map((lv, i) => {
     const v = toLegacyVehicle(lv, slotByReg.get(lv.regNo) ?? lv.edt, i);
@@ -255,19 +255,8 @@ function buildLoungeVehicles(snapshot: Snapshot | null, now: number): { vehicles
     v.ptdTime = fmt12(lv.edt);
     return v;
   });
-  const queueVehicles = snapshot.appointments
-    .filter((a) => a.arrivedAt === undefined)
-    .map((a, i) => toLegacyVehicle(a, a.slot, i));
-  return { vehicles, queueVehicles };
+  return vehicles;
 }
-const isTodayLabel = (label: string) => label.startsWith(fmtShort(new Date())) || label.startsWith(fmtLong(new Date()));
-// "20 Nov '26, 09:15 AM" -> minutes since midnight (for sorting)
-const minutesOf = (label: string) => {
-  const m = label.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!m) return 0;
-  return ((Number(m[1]) % 12) + (m[3].toUpperCase() === "PM" ? 12 : 0)) * 60 + Number(m[2]);
-};
-const timeOnly = (label: string) => label.split(",").pop()?.trim() ?? label;
 
 // Log in once a day: the login is kept on this device until midnight.
 type PortalUser = { role: "Receptionist" | "WorksManager"; name: string; username: string };
@@ -315,7 +304,7 @@ export default function App() {
   const [wmViewMode, setWmViewMode] = useState<"bay" | "pipeline">("bay");
   // Same data source as the Workshop Board (refreshes every 60 s).
   const { snapshot, nextIn: countdown } = useSnapshot();
-  const { vehicles, queueVehicles } = buildLoungeVehicles(snapshot, snapshot?.fetchedAt ?? Date.now());
+  const vehicles = buildLoungeVehicles(snapshot, snapshot?.fetchedAt ?? Date.now());
   const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -732,33 +721,32 @@ export default function App() {
               <thead>
                 <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-xs">
                   <th className="py-3 px-3">#</th>
-                  <th className="py-3 px-3">Time</th>
+                  <th className="py-3 px-3">Appointment Time</th>
                   <th className="py-3 px-3">Vehicle No.</th>
                   <th className="py-3 px-3">Model</th>
                   <th className="py-3 px-3">Customer</th>
                   <th className="py-3 px-3">Service Advisor</th>
                   <th className="py-3 px-3">Department</th>
                   <th className="py-3 px-3">Work Type</th>
-                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Customer Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {[
-                  ...vehicles.map((v) => ({ v, upcoming: false })),
-                  ...queueVehicles.map((v) => ({ v, upcoming: true })),
-                ]
-                  .filter(({ v }) => isTodayLabel(v.gateInDate) && (selectedDept === "ALL" || v.serviceDept === selectedDept))
-                  .sort((a, b) => minutesOf(a.v.gateInDate) - minutesOf(b.v.gateInDate))
-                  .map(({ v, upcoming }, idx) => {
-                    const isBodyshop = v.serviceDept === "BODYSHOP";
+                {/* BU: Customer Status = Arrived / Expected / Late (Late = not arrived 15 min after the appointment time) */}
+                {(snapshot?.appointments ?? [])
+                  .filter((a) => isSameDay(a.slot, currentTime.getTime()) && (selectedDept === "ALL" || a.dept === selectedDept))
+                  .sort((a, b) => a.slot - b.slot)
+                  .map((a, idx) => {
+                    const isBodyshop = a.dept === "BODYSHOP";
+                    const customerStatus = appointmentStatus(a, currentTime.getTime());
                     return (
-                      <tr key={`appt-${v.id}`} className="hover:bg-[#0c1827]">
+                      <tr key={`appt-${a.id}`} className="hover:bg-[#0c1827]">
                         <td className="py-2.5 px-3 text-gray-400 font-mono">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-cyan-300">{timeOnly(v.gateInDate)}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-white tracking-wide">{v.regNo}</td>
-                        <td className="py-2.5 px-3 text-gray-200">{v.model}</td>
-                        <td className="py-2.5 px-3 font-bold text-white uppercase">{v.customer}</td>
-                        <td className="py-2.5 px-3 text-gray-200">{v.serviceAdvisor}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-cyan-300">{fmt12(a.slot)}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-white tracking-wide">{a.regNo}</td>
+                        <td className="py-2.5 px-3 text-gray-200">{a.model}</td>
+                        <td className="py-2.5 px-3 font-bold text-white uppercase">{a.customer}</td>
+                        <td className="py-2.5 px-3 text-gray-200">{a.advisor}</td>
                         <td className="py-2.5 px-3">
                           <span className={`px-2 py-0.5 rounded font-bold text-[11px] border ${
                             isBodyshop ? "bg-amber-950 text-amber-300 border-amber-800" : "bg-blue-950 text-cyan-300 border-blue-800"
@@ -766,13 +754,15 @@ export default function App() {
                             {isBodyshop ? "🎨 Bodyshop" : "🚗 Mechanical"}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-gray-300">{v.workType}</td>
+                        <td className="py-2.5 px-3 text-gray-300">{a.jobType}</td>
                         <td className="py-2.5 px-3">
-                          {upcoming ? (
-                            <span className="px-2 py-0.5 rounded text-[11px] font-bold border bg-slate-800 text-slate-300 border-slate-600">EXPECTED</span>
-                          ) : (
-                            renderFlightBadge(v.flightStatus, v.delayMinutes, v.isPtdCrossed, getLiveVehicleDelay(v).displayLive)
-                          )}
+                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold border ${
+                            customerStatus === "Arrived" ? "bg-emerald-950 text-emerald-300 border-emerald-700"
+                            : customerStatus === "Late" ? "bg-amber-950 text-amber-300 border-amber-700"
+                            : "bg-slate-800 text-slate-300 border-slate-600"
+                          }`}>
+                            {customerStatus.toUpperCase()}
+                          </span>
                         </td>
                       </tr>
                     );

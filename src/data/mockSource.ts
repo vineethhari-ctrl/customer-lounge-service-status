@@ -31,8 +31,9 @@ const KNOWN_REGS = [
   "HR26DK5510", "DL03CB8821", "DL09CD1122",
 ];
 const MODELS = ["Nexon", "Harrier", "Safari", "Punch", "Altroz", "Curvv", "Tiago", "Tigor", "Nexon.ev", "Punch.ev"];
-const MECH_JOBS = ["Paid Service", "First Free Service", "Second Free Service", "Running Repairs", "Wheel Alignment", "EV Health Check"];
-const BODY_JOBS = ["Denting & Painting", "Accidental Repair", "Scratch & Dent Repair", "Full Side Paint", "Bumper Replacement"];
+// BU: Work Type = service type. Mechanical: Paid / First Free / Second Free / Running Repairs. Bodyshop: Accident.
+const MECH_JOBS = ["Paid Service", "First Free Service", "Second Free Service", "Running Repairs"];
+const BODY_JOBS = ["Accident"];
 const TECHNICIANS = [
   "Ramesh Sharma", "Sunil Verma", "Amit Saxena", "Vikas Yadav", "Manoj Tiwari", "Deepak Kumar",
   "Mohan Lal", "Kailash Chand", "Rakesh Pal", "Anand Swamy", "Suresh Jha", "Kamal Hassan",
@@ -126,6 +127,11 @@ export function createMockSource(seed = 20261120): DataSource {
       const v = newVisit(rnd() < 0.7 ? "MECHANICAL" : "BODYSHOP");
       const slot = round(now - between(10, 40) * MIN, 5);
       visits.push({ ...v, slot, arrivedAt: Math.min(now, slot + between(-5, 10) * MIN) });
+    }
+    // Appointment time passed, customer not here yet (shows as "Late").
+    for (let i = 0; i < 2; i++) {
+      const v = newVisit(rnd() < 0.75 ? "MECHANICAL" : "BODYSHOP");
+      visits.push({ ...v, slot: round(now - between(25, 60) * MIN, 5) });
     }
     // Appointments later today (not arrived yet, no bay yet).
     for (let i = 0; i < 6; i++) {

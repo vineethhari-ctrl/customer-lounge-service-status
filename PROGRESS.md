@@ -27,6 +27,13 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   Vehicle Status shows arrived cars only; bay bookings whose car has not arrived show as "Expected" in Appointments.
   Bodyshop estimate amounts are no longer shown (not in the shared data yet).
 
+## Branch `feature/appointments-customer-status` (2026-11-23, waiting for go-live OK)
+- Appointments: "Time" -> "Appointment Time"; "Status" -> "Customer Status" with only Arrived / Expected / Late
+  (Late = not arrived 15 min after appointment time, `APPOINTMENT_LATE_MINUTES`). Rows come from `snapshot.appointments`.
+- Work Type = service type only (BU): Mechanical = Paid Service / First Free Service / Second Free Service / Running Repairs;
+  Bodyshop = Accident. Lower-level works (denting, painting...) are not shown.
+- Workshop board Elapsed = current time − actual start until Done, then frozen (already so; verified with a 10-minute clock test).
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).
