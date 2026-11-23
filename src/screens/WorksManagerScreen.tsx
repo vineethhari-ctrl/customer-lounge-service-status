@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BAY_GROUPS } from "../config";
 import { dataSource } from "../data/source";
 import { Segmented, TopBar } from "../components/TopBar";
@@ -10,14 +10,6 @@ export function WorksManagerScreen({ onOpenLounge, onSignOut }: { onOpenLounge: 
   const { snapshot, error, nextIn } = useSnapshot();
   const now = useNow(15_000);
   const [group, setGroup] = useState("ALL");
-
-  // Scale text with the screen width so the board reads well on a 43" TV (this screen only).
-  useEffect(() => {
-    const root = document.documentElement;
-    const previous = root.style.fontSize;
-    root.style.fontSize = "clamp(13px, 0.9vw, 26px)";
-    return () => { root.style.fontSize = previous; };
-  }, []);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0b1730] text-slate-200">

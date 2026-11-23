@@ -24,9 +24,11 @@ export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, count
   countLabel: string;
 }) {
   const { ref, space } = useRowSpace(CHROME_REM);
-  const fitsAll = rows.length * MIN_ROW_REM <= space;
-  const rowRem = fitsAll ? Math.min(MAX_ROW_REM, space / Math.max(1, rows.length)) : MIN_ROW_REM;
-  const perPage = fitsAll ? Math.max(1, rows.length) : Math.max(3, Math.floor(space / MIN_ROW_REM));
+  // Everything fits: one screen. Otherwise split into EVEN pages (e.g. 19 + 19, not 28 + 10).
+  const maxPerPage = Math.max(3, Math.floor(space / MIN_ROW_REM));
+  const pageCount = Math.max(1, Math.ceil(rows.length / maxPerPage));
+  const perPage = Math.max(1, Math.ceil(rows.length / pageCount));
+  const rowRem = Math.min(MAX_ROW_REM, space / perPage);
   const { pageItems, page, pages } = usePager(rows, perPage);
   return (
     <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-700/70 bg-slate-900/60">

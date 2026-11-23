@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { WorksManagerScreen } from "./screens/WorksManagerScreen";
 import { MILESTONES } from "./config";
-import type { Snapshot } from "./data/types";
-import { useSnapshot } from "./hooks";
+import type { Appointment, Snapshot } from "./data/types";
+import { DataTable, type Column } from "./components/DataTable";
+import { DeptTag, Pill } from "./components/Pill";
+import { useSnapshot, useTvScale } from "./hooks";
 import { SummaryStrip } from "./components/SummaryStrip";
 import { appointmentStatus, isSameDay, loungeStatus } from "./logic";
 
@@ -277,6 +279,7 @@ function saveDailyUser(user: PortalUser | null) {
 const LOGIN_ROLE = new URLSearchParams(window.location.search).get("role");
 
 export default function App() {
+  useTvScale();
   const [currentUser, setCurrentUserState] = useState<PortalUser | null>(loadDailyUser);
   const setCurrentUser = (user: PortalUser | null) => { saveDailyUser(user); setCurrentUserState(user); };
   // After midnight the screen goes back to the login page (the link is kept).
@@ -587,13 +590,48 @@ export default function App() {
     onTime: statusRows.filter((v) => !isDelayedVeh(v) && v.flightStatus !== "READY FOR PICKUP").length,
   };
 
+  // Table columns for the lounge screens (same fit-to-screen table as the Workshop Board).
+  const apptNumber = new Map(appointmentRows.map((a, i) => [a.id, i + 1]));
+  const apptColumns: Column<Appointment>[] = [
+    { key: "n", header: "#", width: "w-[4%]", className: "font-mono text-gray-400", render: (a) => apptNumber.get(a.id) },
+    { key: "t", header: "Appointment Time", width: "w-[11%]", className: "font-mono text-[1.1rem] font-bold text-cyan-300", render: (a) => fmt12(a.slot) },
+    { key: "r", header: "Vehicle No.", width: "w-[12%]", className: "font-mono text-[1.1rem] font-bold text-white", render: (a) => a.regNo },
+    { key: "m", header: "Model", width: "w-[9%]", className: "text-gray-200", render: (a) => a.model },
+    { key: "c", header: "Customer", width: "w-[17%]", className: "font-bold uppercase text-white", render: (a) => a.customer },
+    { key: "sa", header: "Service Advisor", width: "w-[15%]", className: "text-gray-200", render: (a) => a.advisor },
+    { key: "d", header: "Department", width: "w-[10%]", render: (a) => <DeptTag dept={a.dept} /> },
+    { key: "vr", header: "Visit Reason", width: "w-[12%]", className: "text-gray-300", render: (a) => a.jobType },
+    { key: "cs", header: "Customer Status", width: "w-[10%]", render: (a) => {
+      const st = appointmentStatus(a, nowMs);
+      return <Pill tone={st === "Arrived" ? "green" : st === "Late" ? "amber" : "slate"}>{st}</Pill>;
+    } },
+  ];
+  const statusColumns: Column<Vehicle>[] = [
+    { key: "m", header: "Model", width: "w-[6%]", className: "font-bold text-[#00b4d8]", render: (v) => v.model },
+    { key: "r", header: "Registration", width: "w-[9.5%]", className: "font-mono text-[1.05rem] font-bold text-white", render: (v) => v.regNo },
+    { key: "c", header: "Customer", width: "w-[12.5%]", className: "font-bold uppercase text-white", render: (v) => v.customer },
+    { key: "d", header: "Department", width: "w-[7.5%]", render: (v) => <DeptTag dept={v.serviceDept} /> },
+    { key: "vr", header: "Visit Reason", width: "w-[11%]", className: "text-gray-200", render: (v) => v.workType },
+    { key: "sa", header: "Service Advisor", width: "w-[11.5%]", className: "text-gray-200", render: (v) => v.serviceAdvisor },
+    { key: "st", header: "Status", width: "w-[14%]", render: (v) => renderFlightBadge(v.flightStatus, v.delayMinutes, v.isPtdCrossed, getLiveVehicleDelay(v).displayLive) },
+    ...LOUNGE_STATUS_STAGES.map((col): Column<Vehicle> => ({
+      key: col.key, width: "w-[5.6%]",
+      // two lines at most, e.g. "Ready for / Delivery"
+      header: <span className="block text-[0.68rem] leading-tight">{col.label.split(" ").slice(0, -1).join(" ") || col.label}{col.label.includes(" ") && <><br />{col.label.split(" ").slice(-1)}</>}</span>,
+      render: (v) => (
+        <div className={`h-[0.7rem] w-8 rounded ${STATUS_STAGES.indexOf(col) <= v.stageIndex
+          ? (isDelayedVeh(v) ? "bg-red-500" : "bg-emerald-400") : "bg-gray-800 opacity-40"}`} />
+      ),
+    })),
+  ];
+
   // =========================================================================
   // VIEW 3: RECEPTIONIST INTERFACE (Customer Lounge & AI Telecaller CRM)
   // BU Requirement: Remove Bay wise tracking from Reception screen. It is required only for Workshop Board.
   // =========================================================================
   return (
-    <div className="min-h-screen flex flex-col bg-[#040911] text-white font-sans select-none">
-      <header className="bg-[#0b1724] border-b border-gray-800 px-6 py-2.5 flex items-center justify-between text-xs">
+    <div className="h-screen overflow-hidden flex flex-col bg-[#040911] text-white font-sans select-none">
+      <header className="lounge-header bg-[#0b1724] border-b border-gray-800 px-6 py-2.5 flex items-center justify-between text-xs">
         <div className="flex items-center space-x-4">
           <span className="font-extrabold text-blue-400 tracking-wider text-base">TATA MOTORS</span>
           <span className="text-gray-500">|</span>
@@ -718,8 +756,8 @@ export default function App() {
 
       {/* RECEPTIONIST SCREEN 1: APPOINTMENTS (No Bay tracking - Customer Centric) */}
       {receptionTab === "appointments" && (
-        <main className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
+        <main className="flex-1 min-h-0 flex flex-col p-6 pb-3 overflow-hidden">
+          <div className="shrink-0 flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-3">
             <div className="flex items-center space-x-3">
               <span className="text-xl font-bold tracking-tight text-white uppercase">Appointments</span>
               <span className="text-xs text-gray-400 font-mono">TATA MOTORS PASSENGER VEHICLES LOUNGE</span>
@@ -731,7 +769,7 @@ export default function App() {
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-3 shrink-0">
             <SummaryStrip groups={[{ title: "Customer Status", items: [
               { label: "Arrived", value: apptCount.Arrived, tone: "text-emerald-300" },
               { label: "Expected", value: apptCount.Expected, tone: "text-slate-200" },
@@ -739,61 +777,11 @@ export default function App() {
             ] }]} />
           </div>
 
-          {/* BU: list view (no tiles, no vehicle images), today's appointments only, no walk-in differentiation */}
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-xs">
-                  <th className="py-3 px-3">#</th>
-                  <th className="py-3 px-3">Appointment Time</th>
-                  <th className="py-3 px-3">Vehicle No.</th>
-                  <th className="py-3 px-3">Model</th>
-                  <th className="py-3 px-3">Customer</th>
-                  <th className="py-3 px-3">Service Advisor</th>
-                  <th className="py-3 px-3">Department</th>
-                  <th className="py-3 px-3">Visit Reason</th>
-                  <th className="py-3 px-3">Customer Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {/* BU: Customer Status = Arrived / Expected / Late (Late = not arrived 15 min after the appointment time) */}
-                {appointmentRows
-                  .map((a, idx) => {
-                    const isBodyshop = a.dept === "BODYSHOP";
-                    const customerStatus = appointmentStatus(a, nowMs);
-                    return (
-                      <tr key={`appt-${a.id}`} className="hover:bg-[#0c1827]">
-                        <td className="py-2.5 px-3 text-gray-400 font-mono">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-cyan-300">{fmt12(a.slot)}</td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-white tracking-wide">{a.regNo}</td>
-                        <td className="py-2.5 px-3 text-gray-200">{a.model}</td>
-                        <td className="py-2.5 px-3 font-bold text-white uppercase">{a.customer}</td>
-                        <td className="py-2.5 px-3 text-gray-200">{a.advisor}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2 py-0.5 rounded font-bold text-[11px] border ${
-                            isBodyshop ? "bg-amber-950 text-amber-300 border-amber-800" : "bg-blue-950 text-cyan-300 border-blue-800"
-                          }`}>
-                            {isBodyshop ? "🎨 Bodyshop" : "🚗 Mechanical"}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-gray-300">{a.jobType}</td>
-                        <td className="py-2.5 px-3">
-                          <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold border ${
-                            customerStatus === "Arrived" ? "bg-emerald-950 text-emerald-300 border-emerald-700"
-                            : customerStatus === "Late" ? "bg-amber-950 text-amber-300 border-amber-700"
-                            : "bg-slate-800 text-slate-300 border-slate-600"
-                          }`}>
-                            {customerStatus.toUpperCase()}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
+          {/* BU: list view; every appointment of today on one screen so the summary matches what is visible */}
+          <DataTable columns={apptColumns} rows={appointmentRows} rowKey={(a) => a.id}
+            empty="No appointments today." countLabel={`${appointmentRows.length} appointments today`} />
 
-          <div className="mt-6 pt-3 border-t border-gray-800 flex items-center justify-between text-xs">
+          <div className="mt-3 pt-3 shrink-0 border-t border-gray-800 flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-white">TATA MOTORS</span>
               <span className="text-gray-400 text-xs">Service | Connected Adaptive Responsive Engage</span>
@@ -815,8 +803,8 @@ export default function App() {
 
       {/* RECEPTIONIST SCREEN 3: VEHICLE STATUS (No Bay tracking - Shows Department & Customer Estimate Approval) */}
       {receptionTab === "status" && (
-        <main className="flex-1 flex flex-col p-6 overflow-y-auto">
-          <div className="flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-4">
+        <main className="flex-1 min-h-0 flex flex-col p-6 pb-3 overflow-hidden">
+          <div className="shrink-0 flex items-center justify-between border-b-2 border-gray-700 pb-2 mb-3">
             <div className="flex items-center space-x-3">
               <span className="text-xl font-bold tracking-tight text-white uppercase">TATA MOTORS Vehicle Status</span>
               <span className="text-xs text-gray-400 font-mono">LIVE CUSTOMER LOUNGE DISPLAY</span>
@@ -824,7 +812,7 @@ export default function App() {
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
-          <div className="mb-3">
+          <div className="mb-3 shrink-0">
             <SummaryStrip groups={[{ title: "Status", items: [
               { label: "On time", value: statusCount.onTime, tone: "text-emerald-300" },
               { label: "Delayed", value: statusCount.delayed, tone: "text-red-400" },
@@ -832,88 +820,11 @@ export default function App() {
             ] }]} />
           </div>
 
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-[#122336] text-gray-300 border-b border-gray-700 font-semibold uppercase text-[11px]">
-                  <th className="py-3 px-3">Model</th>
-                  <th className="py-3 px-3">Registration</th>
-                  <th className="py-3 px-3">Customer</th>
-                  <th className="py-3 px-3">Department</th>
-                  <th className="py-3 px-3">Visit Reason</th>
-                  <th className="py-3 px-3">Service Advisor</th>
-                  <th className="py-3 px-3">Status</th>
-                  {LOUNGE_STATUS_STAGES.map((col) => (
-                    <th key={col.key} className="py-3 px-2 text-center">
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {statusRows
-                  .map((v) => {
-                    const itemDelay = getLiveVehicleDelay(v);
-                    const isItemDelayed = v.flightStatus === "DELAYED" || v.isPtdCrossed;
-                    const isBodyshop = v.serviceDept === "BODYSHOP";
+          <DataTable columns={statusColumns} rows={statusRows} rowKey={(v) => v.id}
+            rowClassName={(v) => (isDelayedVeh(v) ? "bg-red-950/20" : "")}
+            empty="No vehicles in the workshop." countLabel={`${statusRows.length} vehicles in the workshop`} />
 
-                    return (
-                      <tr key={v.id} className={`transition ${isItemDelayed ? "bg-red-950/20 hover:bg-red-950/30" : "hover:bg-[#0c1827]"}`}>
-                        <td className="py-3 px-3 font-bold text-[#00b4d8] text-[13px]">{v.model}</td>
-                        <td className="py-3 px-3 font-mono font-bold text-white tracking-wide text-[13px]">{v.regNo}</td>
-                        <td className="py-3 px-3 font-bold text-white text-[12px] uppercase">{v.customer}</td>
-                        <td className="py-3 px-3">
-                          <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${
-                            isBodyshop
-                              ? "bg-amber-950 text-amber-300 border-amber-800"
-                              : "bg-blue-950 text-cyan-300 border-blue-800"
-                          }`}>
-                            {isBodyshop ? "🎨 Bodyshop" : "🚗 Mechanical"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="font-bold text-white text-[11px]">{v.workType}</div>
-                          {isBodyshop && v.bodyshopEstimate && (
-                            <div className="text-[9.5px] text-amber-400 mt-0.5 flex items-center space-x-1">
-                              <span>Estimate:</span>
-                              <b className="font-mono">{v.bodyshopEstimate.estimatedAmount}</b>
-                              <span>({v.bodyshopEstimate.approvalStatus})</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-3 text-gray-200">
-                          <div className="font-bold text-[11px]">{v.serviceAdvisor}</div>
-                        </td>
-                        <td className="py-3 px-3">
-                          {renderFlightBadge(v.flightStatus, v.delayMinutes, v.isPtdCrossed, itemDelay.displayLive)}
-                          {isItemDelayed && (
-                            <div className="text-[9.5px] font-mono text-red-400 font-bold mt-1 animate-pulse">
-                              ⏱️ Delay: {itemDelay.displayLive}
-                            </div>
-                          )}
-                        </td>
-                        {LOUNGE_STATUS_STAGES.map((col) => {
-                          const isCompleted = STATUS_STAGES.indexOf(col) <= v.stageIndex;
-                          return (
-                            <td key={col.key} className="py-3 px-2 text-center">
-                              <div className="flex justify-center">
-                                <div className={`w-8 h-4 rounded transition-all ${
-                                  isCompleted 
-                                    ? (isItemDelayed ? "bg-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.7)]" : "bg-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.7)]")
-                                    : "bg-gray-800 opacity-20"
-                                }`}></div>
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-6 pt-3 border-t border-gray-800 flex items-center justify-between text-xs">
+          <div className="mt-3 pt-3 shrink-0 border-t border-gray-800 flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2">
               <span className="font-extrabold text-white">TATA MOTORS</span>
               <span className="text-gray-400 text-xs">Vehicle Milestone Tracking &amp; Delivery Matrix</span>

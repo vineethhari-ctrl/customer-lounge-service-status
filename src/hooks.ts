@@ -66,3 +66,13 @@ export function usePager<T>(items: T[], perPage: number) {
   const current = Math.min(page, pages - 1);
   return { pageItems: items.slice(current * perPage, current * perPage + perPage), page: current, pages };
 }
+
+// Scale all text with the screen width so a 43" TV and a laptop both read well.
+export function useTvScale() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const previous = root.style.fontSize;
+    root.style.fontSize = "clamp(13px, 0.9vw, 26px)";
+    return () => { root.style.fontSize = previous; };
+  }, []);
+}

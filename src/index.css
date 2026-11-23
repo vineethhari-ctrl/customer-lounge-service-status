@@ -33,3 +33,9 @@
 /* Workshop board (table view): blinking "Delayed" label */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 .blink { animation: blink 1.2s ease-in-out infinite; }
+
+/* Lounge top bar: keep every item on one line; only the long lounge name shortens with "..." */
+.lounge-header, .lounge-header * { white-space: nowrap; }
+.lounge-header { gap: 0.75rem; }
+.lounge-header > div:first-child { min-width: 0; flex-shrink: 1; }
+.lounge-header > div:first-child > span:nth-child(3) { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
