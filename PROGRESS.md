@@ -56,7 +56,11 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
      and an error screen with the reason if the app crashes (`ErrorBoundary` in `main.tsx`).
   4. Phones/tablets showed a squeezed, unreadable layout -> `viewport width=1280` shows the normal layout scaled to fit.
   5. Small laptops: lounge top bar hides the long name / user badge below 1400 px (it overlapped the tabs).
-- Standalone file: build `dist/`, inline JS and CSS into one HTML (see `share/`, not committed). Not verified: Firefox / Safari (only Chromium here),
+- Teams report (23 Nov): colleagues opened the HTML inside Teams and saw "content did not load, script did not run correctly".
+  Teams / SharePoint / Outlook previews block scripts, so no app can run there. Now: the page itself says "download the file and open it
+  in Chrome or Edge" even when all scripts are blocked (tested with a script-blocking CSP). The code is also inlined as a plain
+  (non-module) script for the widest compatibility.
+- Standalone file: `npm run standalone` -> `standalone/Tata-Service-Status-Portal.html` (script `scripts/make-standalone.mjs`; output not committed). Not verified: Firefox / Safari (only Chromium here),
   corporate content-security policies that block inline scripts, email/chat previews (they usually run no scripts).
 - Hosting: github.io is blocked on the user's network ("access denied"); a company-internal host is the lasting fix.
 
