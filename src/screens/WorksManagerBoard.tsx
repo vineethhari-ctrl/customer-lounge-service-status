@@ -25,9 +25,9 @@ export function WorksManagerBoard({ snapshot, now, group }: { snapshot: Snapshot
   const groupName = (id: string) => BAY_GROUPS.find((g) => g.id === id)?.id ?? id;
   const dash = <span className="text-slate-600">—</span>;
   const columns: Column<Row>[] = [
-    { key: "bay", header: "Bay", width: "w-[5.5%]", render: (r) => (
-      <div className="leading-tight"><div className="text-[1.15rem] font-bold text-white">{r.bay.id}</div>
-        <div className="text-[0.7rem] text-slate-500">{groupName(r.bay.groupId)}</div></div>) },
+    { key: "bay", header: "Bay", width: "w-[6%]", render: (r) => (
+      <span className="whitespace-nowrap"><span className="text-[1.1rem] font-bold text-white">{r.bay.id}</span>
+        <span className="ml-1.5 text-[0.7rem] text-slate-500">{groupName(r.bay.groupId)}</span></span>) },
     { key: "tech", header: "Technician", width: "w-[13%]", render: (r) => <span className="text-slate-200">{r.bay.technician}</span> },
     { key: "veh", header: "Vehicle", width: "w-[15%]", render: (r) => r.job
       ? <span className="font-mono text-[1.15rem] font-bold text-white">{r.job.regNo}</span>

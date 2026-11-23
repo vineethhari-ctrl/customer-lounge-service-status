@@ -39,6 +39,14 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   Workshop Board (Status: WIP / Yet to start / Done / Bay free; Time: On time / Delayed). Fixed old board bug: "Delayed (live)"
   skipped Done jobs although the Time column showed "Delayed" for them. Verified automatically for every filter (14/14 checks).
 
+## Branch `fix/board-fit-all-rows` (2026-11-23, waiting for go-live OK)
+- BU/user: summary count must equal what is visible. Cause of the mismatch: the board showed one page at a time (17 of 31 bays
+  at 1080p), summary counted all bays. Fix: the table now fits ALL rows on screen (rows shrink from 2.6rem to 1.4rem) and pages
+  only if even that is not enough (e.g. 1366x768 laptop: 29 + 2 bays; footer then says "Showing 1-29 of 31, summary counts cover all 31").
+- Test lesson: count rows that are VISIBLE (inside the window), not rows that exist in the DOM.
+- Open: Appointments and Vehicle Status are plain scrolling lists (about 22 of 38 rows visible at 1080p without scrolling).
+  Same fit/paging approach could be applied if BU wants no scrolling on the TV.
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).

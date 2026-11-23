@@ -12,7 +12,7 @@ export type Tone = keyof typeof TONES;
 
 export function Pill({ tone, children, blink }: { tone: Tone; children: ReactNode; blink?: boolean }) {
   return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-md px-2.5 py-0.5 text-[0.95em] font-semibold ring-1 ${TONES[tone]} ${blink ? "blink" : ""}`}>
+    <span className={`inline-flex items-center whitespace-nowrap rounded-md px-2.5 py-[0.2em] text-[0.95em] font-semibold leading-none ring-1 ${TONES[tone]} ${blink ? "blink" : ""}`}>
       {children}
     </span>
   );

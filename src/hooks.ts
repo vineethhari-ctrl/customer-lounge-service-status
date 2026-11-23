@@ -35,23 +35,23 @@ export function useSnapshot(): { snapshot: Snapshot | null; error: string | null
   return { snapshot, error, nextIn };
 }
 
-// Measures how many table rows fit in the container, so TVs never need scrolling.
-export function useRowsThatFit(rowRem: number, headerRem: number) {
+// Measures the height (in rem) left for table rows, so TVs never need scrolling.
+export function useRowSpace(headerRem: number) {
   const ref = useRef<HTMLDivElement>(null);
-  const [rows, setRows] = useState(10);
+  const [space, setSpace] = useState(30);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const measure = () => {
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      setRows(Math.max(3, Math.floor((el.clientHeight - headerRem * rem) / (rowRem * rem))));
+      setSpace(Math.max(3, el.clientHeight / rem - headerRem));
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [rowRem, headerRem]);
-  return { ref, rows };
+  }, [headerRem]);
+  return { ref, space };
 }
 
 // Rotates through pages of a list every PAGE_SECONDS.
