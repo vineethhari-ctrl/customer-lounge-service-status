@@ -3,6 +3,7 @@ import { WorksManagerScreen } from "./screens/WorksManagerScreen";
 import { MILESTONES } from "./config";
 import type { Snapshot } from "./data/types";
 import { useSnapshot } from "./hooks";
+import { SummaryStrip } from "./components/SummaryStrip";
 import { appointmentStatus, isSameDay, loungeStatus } from "./logic";
 
 // BU: no car images anywhere in the portal.
@@ -571,6 +572,21 @@ export default function App() {
     );
   }
 
+  // Rows shown on the lounge screens, computed once so the summary counts always match the tables.
+  const nowMs = currentTime.getTime();
+  const appointmentRows = (snapshot?.appointments ?? [])
+    .filter((a) => isSameDay(a.slot, nowMs) && (selectedDept === "ALL" || a.dept === selectedDept))
+    .sort((a, b) => a.slot - b.slot);
+  const apptCount = { Arrived: 0, Expected: 0, Late: 0 };
+  for (const a of appointmentRows) apptCount[appointmentStatus(a, nowMs)]++;
+  const statusRows = vehicles.filter((v) => selectedDept === "ALL" || v.serviceDept === selectedDept);
+  const isDelayedVeh = (v: Vehicle) => v.flightStatus === "DELAYED" || v.isPtdCrossed;
+  const statusCount = {
+    ready: statusRows.filter((v) => !isDelayedVeh(v) && v.flightStatus === "READY FOR PICKUP").length,
+    delayed: statusRows.filter(isDelayedVeh).length,
+    onTime: statusRows.filter((v) => !isDelayedVeh(v) && v.flightStatus !== "READY FOR PICKUP").length,
+  };
+
   // =========================================================================
   // VIEW 3: RECEPTIONIST INTERFACE (Customer Lounge & AI Telecaller CRM)
   // BU Requirement: Remove Bay wise tracking from Reception screen. It is required only for Workshop Board.
@@ -715,6 +731,14 @@ export default function App() {
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
+          <div className="mb-3">
+            <SummaryStrip groups={[{ title: "Customer Status", items: [
+              { label: "Arrived", value: apptCount.Arrived, tone: "text-emerald-300" },
+              { label: "Expected", value: apptCount.Expected, tone: "text-slate-200" },
+              { label: "Late", value: apptCount.Late, tone: "text-amber-300" },
+            ] }]} />
+          </div>
+
           {/* BU: list view (no tiles, no vehicle images), today's appointments only, no walk-in differentiation */}
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
@@ -727,18 +751,16 @@ export default function App() {
                   <th className="py-3 px-3">Customer</th>
                   <th className="py-3 px-3">Service Advisor</th>
                   <th className="py-3 px-3">Department</th>
-                  <th className="py-3 px-3">Work Type</th>
+                  <th className="py-3 px-3">Visit Reason</th>
                   <th className="py-3 px-3">Customer Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {/* BU: Customer Status = Arrived / Expected / Late (Late = not arrived 15 min after the appointment time) */}
-                {(snapshot?.appointments ?? [])
-                  .filter((a) => isSameDay(a.slot, currentTime.getTime()) && (selectedDept === "ALL" || a.dept === selectedDept))
-                  .sort((a, b) => a.slot - b.slot)
+                {appointmentRows
                   .map((a, idx) => {
                     const isBodyshop = a.dept === "BODYSHOP";
-                    const customerStatus = appointmentStatus(a, currentTime.getTime());
+                    const customerStatus = appointmentStatus(a, nowMs);
                     return (
                       <tr key={`appt-${a.id}`} className="hover:bg-[#0c1827]">
                         <td className="py-2.5 px-3 text-gray-400 font-mono">{idx + 1}</td>
@@ -802,6 +824,14 @@ export default function App() {
             <span className="text-lg font-black tracking-widest text-gray-300">TATA MOTORS</span>
           </div>
 
+          <div className="mb-3">
+            <SummaryStrip groups={[{ title: "Status", items: [
+              { label: "On time", value: statusCount.onTime, tone: "text-emerald-300" },
+              { label: "Delayed", value: statusCount.delayed, tone: "text-red-400" },
+              { label: "Ready for pickup", value: statusCount.ready, tone: "text-teal-300" },
+            ] }]} />
+          </div>
+
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
@@ -810,7 +840,7 @@ export default function App() {
                   <th className="py-3 px-3">Registration</th>
                   <th className="py-3 px-3">Customer</th>
                   <th className="py-3 px-3">Department</th>
-                  <th className="py-3 px-3">Work Type</th>
+                  <th className="py-3 px-3">Visit Reason</th>
                   <th className="py-3 px-3">Service Advisor</th>
                   <th className="py-3 px-3">Status</th>
                   {LOUNGE_STATUS_STAGES.map((col) => (
@@ -821,8 +851,7 @@ export default function App() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
-                {vehicles
-                  .filter(v => selectedDept === "ALL" || v.serviceDept === selectedDept)
+                {statusRows
                   .map((v) => {
                     const itemDelay = getLiveVehicleDelay(v);
                     const isItemDelayed = v.flightStatus === "DELAYED" || v.isPtdCrossed;

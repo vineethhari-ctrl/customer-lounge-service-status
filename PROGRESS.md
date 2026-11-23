@@ -33,6 +33,11 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Work Type = service type only (BU): Mechanical = Paid Service / First Free Service / Second Free Service / Running Repairs;
   Bodyshop = Accident. Lower-level works (denting, painting...) are not shown.
 - Workshop board Elapsed = current time − actual start until Done, then frozen (already so; verified with a 10-minute clock test).
+- "Work Type" column renamed "Visit Reason" (Appointments and Vehicle Status).
+- Summary counts must equal the rows with that value (BU rule). One shared `SummaryStrip` component, counted from the same
+  rows the table shows: Appointments (Arrived / Expected / Late), Vehicle Status (On time / Delayed / Ready for pickup),
+  Workshop Board (Status: WIP / Yet to start / Done / Bay free; Time: On time / Delayed). Fixed old board bug: "Delayed (live)"
+  skipped Done jobs although the Time column showed "Delayed" for them. Verified automatically for every filter (14/14 checks).
 
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
