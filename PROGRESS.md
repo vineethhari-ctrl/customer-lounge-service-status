@@ -48,7 +48,7 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 - Lounge top bar kept on one line (long lounge name shortens with "..."). Vehicle Status stage headers on two lines.
 - Test lesson: count rows that are VISIBLE (inside the window), step through pages, pause the lounge auto-switch while measuring.
 
-## Branch `fix/works-without-browser-storage` (2026-11-23, waiting for go-live OK)
+## LIVE since 2026-11-24 (with the theme): works for other users (branch `fix/works-without-browser-storage`)
 - Report: "the HTML does not work for others". Found and fixed (reproduced first):
   1. Login did nothing when the browser blocks site storage (localStorage throws) -> now falls back to memory.
   2. Live `index.html` still loaded `cdn.tailwindcss.com` (not needed; a blocked CDN can stall start-up) -> removed.
@@ -64,7 +64,7 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   corporate content-security policies that block inline scripts, email/chat previews (they usually run no scripts).
 - Hosting: github.io is blocked on the user's network ("access denied"); a company-internal host is the lasting fix.
 
-## Branch `feature/service-transformation-theme` (2026-11-24, waiting for go-live OK; includes the pending fixes below)
+## LIVE since 2026-11-24: Service Transformation theme (from branch `feature/service-transformation-theme`, includes the fixes below)
 - BU asked for the theme of the other Service Transformation screens (screens shared by the user as images; Figma link not used yet):
   white header "TATA MOTORS | Service Transformation", light page, white rounded cards, big coloured KPI numbers with icons,
   rounded filter pills in a card, zebra tables, soft status chips. Tokens in `src/index.css` (`@theme`).
