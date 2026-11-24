@@ -63,3 +63,8 @@ export function fmtDuration(ms: number | undefined): string {
 export function fmtLate(minutes: number): string {
   return minutes >= 60 ? `+${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, "0")}m` : `+${minutes}m`;
 }
+
+// 12-hour clock for customer-facing times, e.g. "09:20 AM".
+export function fmt12(ms: number): string {
+  return new Date(ms).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+}

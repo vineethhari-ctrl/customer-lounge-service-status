@@ -64,6 +64,20 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   corporate content-security policies that block inline scripts, email/chat previews (they usually run no scripts).
 - Hosting: github.io is blocked on the user's network ("access denied"); a company-internal host is the lasting fix.
 
+## Branch `feature/service-transformation-theme` (2026-11-24, waiting for go-live OK; includes the pending fixes below)
+- BU asked for the theme of the other Service Transformation screens (screens shared by the user as images; Figma link not used yet):
+  white header "TATA MOTORS | Service Transformation", light page, white rounded cards, big coloured KPI numbers with icons,
+  rounded filter pills in a card, zebra tables, soft status chips. Tokens in `src/index.css` (`@theme`).
+- App rewritten into small parts: `App.tsx` (login + routing), `session.ts`, `screens/Login|LoungeScreen|WorksManagerScreen|WorksManagerBoard`,
+  `components/AppHeader|KpiStrip|PillGroup|DataTable|Pill|Icon`. The ~800 lines of legacy dark-theme code are gone.
+- The KPI strip IS the summary (number = rows with that value; verified for 16 checks at 4 screen sizes, visible rows only).
+  Appointments strip: Appointments / Arrived / Expected / Late. Vehicle Status: Vehicles / On time / Delayed / Ready for pickup.
+  Board: Status (WIP / Yet to start / Done / Bay free) and Time (On time / Delayed).
+- Fit rule kept at 1080p: Board 31/31 and Vehicle Status 22/22 on one screen; Appointments 38 -> 2 even pages.
+- Changes of behaviour: lounge no longer has a "Workshop Board" button (only Works Manager has "Open Lounge View"; before, the TV link could
+  still reach the board through that button); Delayed chip reads "Delayed +25m" (no "PTD CROSSED"); Login username has no pre-filled ID.
+- Open: exact fonts/colours were taken from screenshots; the Figma link would allow exact tokens.
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).

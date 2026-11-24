@@ -10,10 +10,10 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   render() {
     if (!this.state.error) return this.props.children;
     return (
-      <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif', color: '#e2e8f0', background: '#0b1730', minHeight: '100vh' }}>
+      <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif', color: '#1b2430', background: '#f3f5f9', minHeight: '100vh' }}>
         <h2 style={{ margin: 0 }}>Tata Motors Workshop Service Status</h2>
         <p>Sorry, the screen could not be shown. Please reload the page (Ctrl+F5). If it happens again, send this message to the project team:</p>
-        <pre style={{ whiteSpace: 'pre-wrap', background: '#06102a', padding: 12, borderRadius: 6 }}>{String(this.state.error.message || this.state.error)}</pre>
+        <pre style={{ whiteSpace: 'pre-wrap', background: '#ffffff', border: '1px solid #e6e9f0', padding: 12, borderRadius: 6 }}>{String(this.state.error.message || this.state.error)}</pre>
       </div>
     );
   }

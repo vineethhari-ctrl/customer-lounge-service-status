@@ -10,8 +10,8 @@ export interface Column<T> {
 }
 
 const MAX_ROW_REM = 2.6;  // roomy rows when there are few
-const MIN_ROW_REM = 1.4;  // most compact row that is still readable on a TV
-const CHROME_REM = 5.0;   // table header + footer
+const MIN_ROW_REM = 1.3;  // most compact row that is still readable on a TV
+const CHROME_REM = 4.4;   // table header (2.4rem) + footer (2rem)
 
 // TV-friendly table. BU: the summary count must match what is on screen, so ALL rows are shown at once;
 // rows get more compact (down to MIN_ROW_REM) before the table falls back to showing page by page.
@@ -31,32 +31,32 @@ export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, count
   const rowRem = Math.min(MAX_ROW_REM, space / perPage);
   const { pageItems, page, pages } = usePager(rows, perPage);
   return (
-    <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-slate-700/70 bg-slate-900/60">
+    <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-card">
       <table className="w-full table-fixed border-collapse">
         <thead>
-          <tr className="h-[2.6rem] bg-slate-800 text-left text-[0.8rem] font-bold uppercase tracking-wider text-slate-300">
+          <tr className="h-[2.4rem] border-b border-line bg-head text-left text-[0.85rem] font-semibold leading-tight text-ink">
             {columns.map((c) => <th key={c.key} className={`px-3 ${c.width}`}>{c.header}</th>)}
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-ink-2">
           {pageItems.map((r, i) => (
             <tr key={rowKey(r)} style={{ height: `${rowRem}rem` }}
-              className={`border-t border-slate-800 ${i % 2 ? "bg-slate-900/40" : ""} ${rowClassName?.(r) ?? ""}`}>
+              className={`border-t border-line/70 ${i % 2 ? "bg-zebra" : "bg-card"} ${rowClassName?.(r) ?? ""}`}>
               {columns.map((c) => <td key={c.key} className={`truncate px-3 leading-none ${c.className ?? ""}`}>{c.render(r)}</td>)}
             </tr>
           ))}
           {rows.length === 0 && (
-            <tr><td colSpan={columns.length} className="px-3 py-10 text-center text-slate-400">{empty}</td></tr>
+            <tr><td colSpan={columns.length} className="px-3 py-10 text-center text-ink-3">{empty}</td></tr>
           )}
         </tbody>
       </table>
-      <div className="mt-auto flex h-[2.4rem] items-center justify-between border-t border-slate-800 px-3 text-[0.85rem] text-slate-400">
+      <div className="mt-auto flex h-[2rem] shrink-0 items-center justify-between border-t border-line px-3 text-[0.85rem] text-ink-3">
         <span>{countLabel}</span>
         {pages > 1 && (
           <span className="flex items-center gap-2">
             Showing {page * perPage + 1}–{Math.min(rows.length, (page + 1) * perPage)} of {rows.length} · summary counts cover all {rows.length} · page {page + 1} of {pages}
             {Array.from({ length: pages }, (_, i) => (
-              <span key={i} className={`inline-block h-2 w-2 rounded-full ${i === page ? "bg-cyan-400" : "bg-slate-600"}`} />
+              <span key={i} className={`inline-block h-2 w-2 rounded-full ${i === page ? "bg-brand" : "bg-line"}`} />
             ))}
           </span>
         )}
