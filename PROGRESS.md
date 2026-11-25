@@ -78,7 +78,7 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   still reach the board through that button); Delayed chip reads "Delayed +25m" (no "PTD CROSSED"); Login username has no pre-filled ID.
 - Open: exact fonts/colours were taken from screenshots; the Figma link would allow exact tokens.
 
-## Branch `feature/oem-tv-redesign` (2026-11-25, waiting for review; NOT merged, NOT live)
+## LIVE since 2026-11-25: OEM-style redesign (from branch `feature/oem-tv-redesign`)
 - BU rejected the table look. New design per the user's spec (this OVERRIDES earlier BU asks: bay table from the paper, "no tile view",
   "Late" status, KPI-summary-above-table, light theme). Domain logic, sandbox data, login, timers and build are unchanged.
 - **Customer Lounge** (dark navy, TV): header TATA MOTORS | Service Transformation, CUSTOMER LOUNGE badge, date + clock, gear icon only.
