@@ -182,7 +182,7 @@ export function createMockSource(seed = 20261120): DataSource {
       const arrived = visits.filter((v) => v.arrivedAt !== undefined);
       return {
         bays: bays.map((b) => ({ ...b })),
-        jobs: visits.filter((v) => v.job).map((v) => ({ ...v.job! })),
+        jobs: visits.filter((v) => v.job).map((v) => ({ ...v.job!, hold: v.estimatePending && v.job!.actualStart === undefined })),
         appointments: visits.map((v, i) => ({
           id: `A${i + 1}`, slot: v.slot, regNo: v.regNo, model: v.model, customer: v.customer,
           advisor: v.advisor, dept: v.dept, jobType: v.jobType, arrivedAt: v.arrivedAt,

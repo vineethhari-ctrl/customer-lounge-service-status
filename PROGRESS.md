@@ -78,6 +78,29 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   still reach the board through that button); Delayed chip reads "Delayed +25m" (no "PTD CROSSED"); Login username has no pre-filled ID.
 - Open: exact fonts/colours were taken from screenshots; the Figma link would allow exact tokens.
 
+## Branch `feature/oem-tv-redesign` (2026-11-25, waiting for review; NOT merged, NOT live)
+- BU rejected the table look. New design per the user's spec (this OVERRIDES earlier BU asks: bay table from the paper, "no tile view",
+  "Late" status, KPI-summary-above-table, light theme). Domain logic, sandbox data, login, timers and build are unchanged.
+- **Customer Lounge** (dark navy, TV): header TATA MOTORS | Service Transformation, CUSTOMER LOUNGE badge, date + clock, gear icon only.
+  All controls (screen, department, auto-switch + prev/next, chime, refresh info, switch to Works Manager, sign out) are in the gear drawer.
+  3 KPI cards (Ready for Delivery / Vehicles In Service / Today's Appointments). One carousel changes page every 15 s:
+  Vehicle Status pages, then Appointments pages (rows fill the card; pages are even). Connected 5-step track
+  Received - Job Card - In Bay - Washing - Ready; Est. ready time ("READY NOW" / time / "SOON"); statuses Ready for Delivery / Washing / In Progress.
+  Customers never see delay wording or +Xm. Names "Rajesh K. V.", plates "MH 01 EK 9921". Bottom ticker announces ready vehicles with the advisor.
+  Appointments statuses: Arrived / Expected / On Way (On Way = not here yet, due within 15 min or past the slot; replaces "Late").
+- **Workshop Control Board** (slate/light): header with bay-group pills, Exceptions First toggle, Lounge View, clock; KPI bar (Active WIP, Yet to Start,
+  Completed, Free Bays, On Time, Approval Hold, Delayed); grid of bay cards grouped S1/S2/S3 (or flat, delayed -> hold -> on time -> done -> free
+  when Exceptions First is on). Card: bay, technician, state badge, plate, model/job, SA, elapsed vs planned bar, plan times.
+  Estimate hold = new `hold` flag on `BayJob` (sandbox: bodyshop job waiting for estimate approval).
+- Screen fit: 1920x1080 and 1280x720: no horizontal scroll, no page scroll, all 31 cards visible. At heights <= 820 px the cards are compact
+  (SA and plan lines move to the hover tooltip; "ESTIMATE HOLD" shortens to "HOLD" below 1500 px width).
+- Code: `src/screens/LoungeScreen.tsx` + `lounge/` (StepTrack, Ticker, SettingsDrawer), `WorksManagerScreen.tsx` + `workshop/BayCard.tsx`,
+  `format.ts` (plate / name formatting), customer and card rules in `logic.ts`. Removed: DataTable, KpiStrip, PillGroup, AppHeader, Pill, WorksManagerBoard.
+- Tests run (browser, 1920x1080 and 1280x720): 60 checks incl. KPI = visible rows over all pages, no delay words in 6-hour-later run, exceptions order,
+  role switching, standalone HTML with blocked storage / blocked scripts / phone. `npm run standalone` -> `standalone/Tata-Service-Status-Portal.html`.
+- Open: "Final Inspection" is not a stage in the data (Washing is shown instead); On Way rule and "SOON" wording to confirm with BU;
+  On Time KPI counts bays running to plan (done bays are under Completed, holds under Approval Hold).
+
 ## ON HOLD (do not forget): branch `feature/bu-simple-list-views`
 Full redesign from BU's whiteboard and notebook photos, waiting for the user's go-ahead:
 - Works Manager bay board as a table: Bay | Technician | Vehicle | Start Plan/Actual | End Plan | Elapsed | Status (Yet to start/WIP/Done) | Time (On time/Delayed).

@@ -47,9 +47,12 @@ export function useRowSpace(headerRem: number) {
       setSpace(Math.max(3, el.clientHeight / rem - headerRem));
     };
     measure();
+    // The screen may change the root font size right after this runs (see useTvScale), so measure again a moment later.
+    const raf = requestAnimationFrame(measure);
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", measure);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener("resize", measure); };
   }, [headerRem]);
   return { ref, space };
 }
@@ -68,11 +71,12 @@ export function usePager<T>(items: T[], perPage: number) {
 }
 
 // Scale all text with the screen width so a 43" TV and a laptop both read well.
-export function useTvScale() {
+// `vw` is the share of the screen width one rem should take (0.9 = laptop/office screen, 1 = lounge TV).
+export function useTvScale(vw = 0.9) {
   useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = root.style.fontSize;
-    root.style.fontSize = "clamp(13px, 0.9vw, 26px)";
+    root.style.fontSize = `clamp(13px, ${vw}vw, 28px)`;
     return () => { root.style.fontSize = previous; };
-  }, []);
+  }, [vw]);
 }

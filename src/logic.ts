@@ -68,3 +68,52 @@ export function fmtLate(minutes: number): string {
 export function fmt12(ms: number): string {
   return new Date(ms).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
 }
+
+// ---------------------------------------------------------------------------------------------
+// Customer Lounge (customer-facing). BU rule: customers never see delays or SLA breaches.
+// Internal delay logic (loungeStatus "Delayed", the Workshop Board) is not used for what customers see.
+// ---------------------------------------------------------------------------------------------
+
+// The five steps customers see, and which one a vehicle is on (index into LOUNGE_STEPS).
+export const LOUNGE_STEPS = ["Received", "Job Card", "In Bay", "Washing", "Ready"] as const;
+const STEP_OF: Record<string, number> = {
+  "Gate In": 0, "Job Card": 1, "Estimate Approval": 1, "In Bay (WIP)": 2, "Washing": 3, "Ready for Delivery": 4,
+};
+export function loungeStep(v: LoungeVehicle): number {
+  return STEP_OF[MILESTONES[v.dept][v.stage]] ?? 0;
+}
+
+export type CustomerStatus = "Ready for Delivery" | "Washing" | "In Progress";
+export function customerStatus(v: LoungeVehicle): CustomerStatus {
+  const step = loungeStep(v);
+  return step === 4 ? "Ready for Delivery" : step === 3 ? "Washing" : "In Progress";
+}
+
+// Estimated ready time shown to customers: "READY NOW", the estimate, or "SOON" once the estimate has passed.
+// (A passed estimate is never shown as a delay and never as an old time.)
+export function readyTimeLabel(v: LoungeVehicle, now: number): string {
+  if (loungeStep(v) === 4) return "READY NOW";
+  return now > v.edt ? "SOON" : fmt12(v.edt);
+}
+
+// Appointment status for the lounge TV: Arrived / Expected / On Way.
+// "On Way" = not here yet but due now or already past the slot; it replaces "Late", which customers must not see.
+export type LoungeApptStatus = "Arrived" | "Expected" | "On Way";
+export function loungeApptStatus(a: Appointment, now: number): LoungeApptStatus {
+  if (a.arrivedAt !== undefined) return "Arrived";
+  return now >= a.slot - 15 * MIN ? "On Way" : "Expected";
+}
+
+// ---------------------------------------------------------------------------------------------
+// Workshop Control Board (Works Manager): one state per bay card. Every KPI is counted from these states.
+// ---------------------------------------------------------------------------------------------
+export type CardState = "free" | "done" | "hold" | "delayed" | "ontime";
+
+// Precedence: a free bay is free; a finished job is done; a bodyshop job waiting for estimate approval is a HOLD
+// (a customer/insurance wait, not a technician delay); otherwise delayed or on time by the plan.
+export function bayCardState(job: BayJob | undefined, now: number): CardState {
+  if (!job) return "free";
+  if (bayStatus(job) === "Done") return "done";
+  if (job.hold) return "hold";
+  return timeStatus(job, now).delayed ? "delayed" : "ontime";
+}

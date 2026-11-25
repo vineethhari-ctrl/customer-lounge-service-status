@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { useTvScale } from "./hooks";
 import { Login } from "./screens/Login";
 import { LoungeScreen } from "./screens/LoungeScreen";
 import { WorksManagerScreen } from "./screens/WorksManagerScreen";
-import { RECEPTIONIST, loadUser, loginRoleFromLink, saveUser, type PortalUser } from "./session";
+import { RECEPTIONIST, WORKS_MANAGER, loadUser, loginRoleFromLink, saveUser, type PortalUser } from "./session";
 
 export default function App() {
-  useTvScale();
   const [user, setUserState] = useState<PortalUser | null>(loadUser);
   const setUser = (u: PortalUser | null) => { saveUser(u); setUserState(u); };
 
@@ -20,5 +18,5 @@ export default function App() {
   if (!user) return <Login onLogin={setUser} onlyRole={loginRoleFromLink()} />;
   return user.role === "WorksManager"
     ? <WorksManagerScreen user={user} onOpenLounge={() => setUser(RECEPTIONIST)} onSignOut={() => setUser(null)} />
-    : <LoungeScreen user={user} onSignOut={() => setUser(null)} />;
+    : <LoungeScreen user={user} onSignOut={() => setUser(null)} onOpenWorkshop={loginRoleFromLink() === "Receptionist" ? undefined : () => setUser(WORKS_MANAGER)} />;
 }

@@ -27,3 +27,21 @@ body { margin: 0; background: var(--color-page); color: var(--color-ink); font-f
 /* Late jobs blink so they cannot be missed on a TV */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 .blink { animation: blink 1.4s ease-in-out infinite; }
+
+/* Workshop Control Board: bay cards. 8 across on every desktop/TV width; one fixed card height per screen height. */
+.bays-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-auto-rows: 9rem; }
+@media (max-width: 1250px) { .bays-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+/* Short screens (e.g. 1280x720): compact cards so all 31 bays stay visible at once. The advisor and plan
+   lines are hidden on the card and stay available in the tooltip (hover). */
+@media (max-height: 820px) {
+  .bays-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); grid-auto-rows: 7rem; }
+  .bay-extra { display: none; }
+}
+
+/* On screens narrower than 1500 px the long "ESTIMATE HOLD" badge becomes "HOLD" so the bay number is never cut */
+.badge-short { display: none; }
+@media (max-width: 1500px) { .badge-long { display: none; } .badge-short { display: inline; } }
+
+/* Customer Lounge ticker: the message slides in when it changes */
+@keyframes ticker-in { from { opacity: 0; transform: translateY(0.6rem); } to { opacity: 1; transform: none; } }
+.ticker-in { animation: ticker-in 0.5s ease-out; }

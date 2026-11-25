@@ -18,6 +18,7 @@ export interface BayJob {
   planEnd: number;
   actualStart?: number; // set when work starts
   actualEnd?: number;   // set when work is done
+  hold?: boolean;       // bodyshop: waiting for customer / insurance estimate approval (not a technician delay)
 }
 
 export interface Appointment {
