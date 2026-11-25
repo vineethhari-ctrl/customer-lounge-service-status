@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../src"); /* only scan src/ for class names (not versions/ or standalone/, which hold old designs) */
 
 /* Service Transformation look: white cards on a light page, blue accent, colourful KPI numbers. */
 @theme {
