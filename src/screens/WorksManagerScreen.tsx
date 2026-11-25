@@ -7,7 +7,6 @@ import { BayCard } from "./workshop/BayCard";
 
 type Group = "ALL" | string;
 const PRIORITY: Record<CardState, number> = { delayed: 0, hold: 1, ontime: 2, done: 3, free: 4 };
-const GROUP_LABEL: Record<string, string> = { S1: "S1 Mechanical", S2: "S2 Mechanical", S3: "S3 Bodyshop" };
 
 function Clock() {
   const now = useNow(1000);
@@ -66,7 +65,7 @@ export function WorksManagerScreen({ user, onOpenLounge, onSignOut }: { user: Po
     : cards;
   const sections = exceptionsFirst
     ? [{ id: "ex", title: `Exceptions first · ${n.delayed + n.hold} need attention`, items: sorted }]
-    : BAY_GROUPS.map((g) => ({ id: g.id, title: `${GROUP_LABEL[g.id] ?? g.id} · ${cards.filter((c) => c.bay.groupId === g.id).length} bays`, items: sorted.filter((c) => c.bay.groupId === g.id) })).filter((s) => s.items.length);
+    : BAY_GROUPS.map((g) => ({ id: g.id, title: `${g.name} · ${cards.filter((c) => c.bay.groupId === g.id).length} bays`, items: sorted.filter((c) => c.bay.groupId === g.id) })).filter((s) => s.items.length);
 
   const pillCls = (on: boolean) => `whitespace-nowrap rounded-full px-[0.9rem] py-[0.3rem] text-[0.88rem] transition ${on ? "bg-white font-bold text-[#0F172A]" : "text-[#CBD5E1] hover:text-white"}`;
   const total = snapshot?.bays.length ?? 31;
@@ -81,7 +80,7 @@ export function WorksManagerScreen({ user, onOpenLounge, onSignOut }: { user: Po
           <button type="button" aria-pressed={group === "ALL"} onClick={() => setGroup("ALL")} className={pillCls(group === "ALL")}>All Bays ({total})</button>
           {BAY_GROUPS.map((g) => (
             <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => setGroup(g.id)} className={pillCls(group === g.id)}>
-              {g.id} {g.dept === "BODYSHOP" ? "Bodyshop" : "Mech"} ({g.bayCount})
+              {g.name} ({g.bayCount})
             </button>
           ))}
         </div>
@@ -111,7 +110,7 @@ export function WorksManagerScreen({ user, onOpenLounge, onSignOut }: { user: Po
           <section key={s.id} className="mb-2" aria-label={s.title}>
             <h2 className="mb-[0.3rem] text-[0.78rem] font-bold uppercase tracking-[0.14em] text-[#64748B]">{s.title}</h2>
             <div className="grid gap-[0.5rem] bays-grid">
-              {s.items.map((c) => <BayCard key={c.bay.id} bay={c.bay} job={c.job} advisor={c.advisor} state={c.state} now={now} />)}
+              {s.items.map((c) => <BayCard key={c.bay.id} bay={c.bay} job={c.job} advisor={c.advisor} state={c.state} now={now} showGroup={exceptionsFirst} />)}
             </div>
           </section>
         ))}

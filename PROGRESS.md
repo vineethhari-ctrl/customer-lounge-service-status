@@ -78,6 +78,12 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
   still reach the board through that button); Delayed chip reads "Delayed +25m" (no "PTD CROSSED"); Login username has no pre-filled ID.
 - Open: exact fonts/colours were taken from screenshots; the Figma link would allow exact tokens.
 
+## Branch `feature/bay-group-names` (2026-11-25, waiting for go-live OK)
+- User: "Rename S1, S2, S3 as Bay group 1, 2, 3 wherever applicable." Done on the Workshop Control Board: filter pills ("Bay group 1 (5)" ...),
+  section headings ("BAY GROUP 1 · 5 BAYS"), and bay cards in Exceptions First view (grouped view relies on the headings).
+  Internal ids are now BG1..BG3 (`src/config.ts`, `bayGroupName()`); the unconfirmed "Mech / Bodyshop" words were removed from the labels.
+- Versions 1 and 2 (backup HTML files) still say S1/S2/S3; that is how they looked when live.
+
 ## VERSIONS (user asks "give me version 1 / 2 / 3" -> send the matching HTML from `versions/`)
 - **Version 1** = dark BU tables, live 23 Nov 2026 (commit `dac90a5`)  -> `versions/Version-1-dark-tables.html`
 - **Version 2** = light Service Transformation tables, live 24-25 Nov (commit `e7fd6cd`) -> `versions/Version-2-light-tables.html`
