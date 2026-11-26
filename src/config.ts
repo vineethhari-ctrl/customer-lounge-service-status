@@ -3,18 +3,18 @@
 export type Dept = "MECHANICAL" | "BODYSHOP";
 
 export interface BayGroup {
-  id: string;     // short code shown on the filter, e.g. "S1"
-  name: string;   // label shown on screen
+  id: string;     // internal code, e.g. "BG1"
+  name: string;   // label shown on screen, e.g. "Bay group 1"
   dept: Dept;
   bayCount: number;
 }
 
-// BU paper: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> 11" (31 bays).
+// BU paper: "Sets / bays: S1 -> 5, S2 -> 15, S3 -> 11" (31 bays). Shown on screen as "Bay group 1 / 2 / 3" (user decision, 26 Nov).
 // Departments per set are not on the paper; they only drive the sample data (Mechanical / Bodyshop).
 export const BAY_GROUPS: BayGroup[] = [
-  { id: "S1", name: "S1", dept: "MECHANICAL", bayCount: 5 },
-  { id: "S2", name: "S2", dept: "MECHANICAL", bayCount: 15 },
-  { id: "S3", name: "S3", dept: "BODYSHOP", bayCount: 11 },
+  { id: "BG1", name: "Bay group 1", dept: "MECHANICAL", bayCount: 5 },
+  { id: "BG2", name: "Bay group 2", dept: "MECHANICAL", bayCount: 15 },
+  { id: "BG3", name: "Bay group 3", dept: "BODYSHOP", bayCount: 11 },
 ];
 
 // Customer-facing milestones (BU: "remove RO, promise date; add Washing").

@@ -24,14 +24,14 @@ export function WorksManagerBoard({ snapshot, now, group, filterBar }: { snapsho
     if (timeStatus(r.job, now).delayed) count.delayed++; else count.onTime++;
   }
 
-  const groupName = (id: string) => BAY_GROUPS.find((g) => g.id === id)?.id ?? id;
+  const groupName = (id: string) => BAY_GROUPS.find((g) => g.id === id)?.name ?? id;
   const dash = <span className="text-ink-3">—</span>;
   const columns: Column<Row>[] = [
-    { key: "bay", header: "Bay", width: "w-[6%]", render: (r) => (
+    { key: "bay", header: "Bay", width: "w-[13%]", render: (r) => (
       <span className="whitespace-nowrap"><span className="text-[1.05rem] font-bold text-ink">{r.bay.id}</span>
-        <span className="ml-1.5 text-[0.7rem] text-ink-3">{groupName(r.bay.groupId)}</span></span>) },
+        <span className="text-[0.7rem] text-ink-3">{" "}{groupName(r.bay.groupId)}</span></span>) },
     { key: "tech", header: "Technician", width: "w-[13%]", className: "text-ink", render: (r) => r.bay.technician },
-    { key: "veh", header: "Vehicle", width: "w-[15%]", render: (r) => r.job
+    { key: "veh", header: "Vehicle", width: "w-[13%]", render: (r) => r.job
       ? <span className="font-mono text-[1.05rem] font-semibold text-ink">{r.job.regNo}</span>
       : <span className="italic text-ink-3">Bay free</span> },
     { key: "ps", header: <>Start<br /><span className="font-normal text-ink-3">Plan</span></>, width: "w-[8%]", className: "font-mono", render: (r) => r.job ? fmtTime(r.job.planStart) : dash },
