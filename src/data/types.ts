@@ -2,7 +2,7 @@ import type { Dept } from "../config";
 
 export interface Bay {
   id: string;         // "B1"
-  groupId: string;    // "S1"
+  groupId: string;    // "BG1"
   dept: Dept;
   technician: string; // technician assigned to the bay today
 }
