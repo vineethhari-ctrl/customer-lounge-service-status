@@ -21,10 +21,7 @@ const LIT_BARS: Record<string, number> = {
   "Gate In": 1, "Job Card": 1, "Estimate Approval": 1, "In Bay (WIP)": 2, "Washing": 3, "Ready for Delivery": 5,
 };
 
-// Lounge lists use roomy rows; more pages are used instead of squeezing. Appointments has more columns, so it gets a bit more room
-// (this keeps its rows as tall as Vehicle Status rows on every screen size).
-const STATUS_MIN_ROW_REM = 2.2;
-const APPT_MIN_ROW_REM = 2.5;
+const LOUNGE_ROW_REM = 2.9; // the same for Appointments and Vehicle Status, on every page and filter
 
 const APPT_TONE: Record<AppointmentStatus, "green" | "grey" | "amber"> = { Arrived: "green", Expected: "grey", Late: "amber" };
 
@@ -84,20 +81,20 @@ export function LoungeScreen({ user, onSignOut }: { user: PortalUser; onSignOut:
   ];
 
   const statusColumns: Column<LoungeVehicle>[] = [
-    { key: "m", header: "Model", width: "w-[6%]", className: "font-semibold text-brand", render: (v) => v.model },
+    { key: "m", header: "Model", width: "w-[7%]", className: "font-semibold text-brand", render: (v) => v.model },
     { key: "r", header: "Registration", width: "w-[9.5%]", className: "font-mono font-semibold text-ink", render: (v) => v.regNo },
     { key: "c", header: "Customer", width: "w-[12.5%]", className: "font-semibold text-ink", render: (v) => v.customer },
     { key: "d", header: "Department", width: "w-[9%]", render: (v) => <DeptTag dept={v.dept} /> },
-    { key: "vr", header: "Visit Reason", width: "w-[11%]", render: (v) => v.jobType },
-    { key: "sa", header: "Service Advisor", width: "w-[11.5%]", render: (v) => v.advisor },
-    { key: "st", header: "Status", width: "w-[12%]", render: (v) => {
+    { key: "vr", header: "Visit Reason", width: "w-[12%]", render: (v) => v.jobType },
+    { key: "sa", header: "Service Advisor", width: "w-[13%]", render: (v) => v.advisor },
+    { key: "st", header: "Status", width: "w-[11.5%]", render: (v) => {
       const s = loungeStatus(v, now);
       return s === "Ready" ? <Pill tone="green">Ready for pickup</Pill>
         : s === "Delayed" ? <Pill tone="red" blink>Delayed {fmtLate(Math.floor((now - v.edt) / 60000))}</Pill>
         : <Pill tone="blue">On time</Pill>;
     } },
     ...STAGE_COLUMNS.map((label, idx): Column<LoungeVehicle> => ({
-      key: label, width: "w-[5.6%]",
+      key: label, width: "w-[5.1%]",
       header: <span className="block text-[0.72rem] leading-tight">{label.split(" ").slice(0, -1).join(" ")}<br />{label.split(" ").slice(-1)}</span>,
       render: (v) => {
         const lit = idx < (LIT_BARS[MILESTONES[v.dept][v.stage]] ?? 1);
@@ -139,11 +136,11 @@ export function LoungeScreen({ user, onSignOut }: { user: PortalUser; onSignOut:
         </FilterBar>
         {tab === "appointments" ? (
           <DataTable columns={apptColumns} rows={appointments} rowKey={(a) => a.id}
-            minRowRem={APPT_MIN_ROW_REM}
+            rowRem={LOUNGE_ROW_REM}
             empty="No appointments today." countLabel={`${appointments.length} appointments today`} />
         ) : (
           <DataTable columns={statusColumns} rows={vehicles} rowKey={(v) => v.regNo}
-            minRowRem={STATUS_MIN_ROW_REM}
+            rowRem={LOUNGE_ROW_REM}
             empty="No vehicles in the workshop." countLabel={`${vehicles.length} vehicles in the workshop`} />
         )}
       </main>

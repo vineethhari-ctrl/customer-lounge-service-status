@@ -9,27 +9,24 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
 }
 
-const MAX_ROW_REM = 2.8;  // roomy rows when there are few
-const COMPACT_ROW_REM = 1.3; // default: most compact row that is still readable (Workshop Board: all bays on one screen)
+// One fixed row height for every page, filter and window size (so nothing ever looks squeezed in one place and loose in another).
+// The window only decides HOW MANY rows fit on a page; extra rows go to the next page, split evenly (e.g. 13 + 13 + 12).
+const DEFAULT_ROW_REM = 2.4;
 const CHROME_REM = 4.4;   // table header (2.4rem) + footer (2rem)
 
-// TV-friendly table. BU: the summary count must match what is on screen, so ALL rows are shown at once;
-// rows get more compact (down to MIN_ROW_REM) before the table falls back to showing page by page.
-export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, countLabel, minRowRem = COMPACT_ROW_REM }: {
+export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, countLabel, rowRem = DEFAULT_ROW_REM }: {
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   rowClassName?: (row: T) => string;
   empty: string;
   countLabel: string;
-  minRowRem?: number; // rows never get smaller than this; more pages are used instead (lounge lists use 2.2)
+  rowRem?: number; // fixed row height in rem
 }) {
   const { ref, space } = useRowSpace(CHROME_REM);
-  // Everything fits: one screen. Otherwise split into EVEN pages (e.g. 19 + 19, not 28 + 10).
-  const maxPerPage = Math.max(3, Math.floor(space / minRowRem));
+  const maxPerPage = Math.max(3, Math.floor(space / rowRem));
   const pageCount = Math.max(1, Math.ceil(rows.length / maxPerPage));
   const perPage = Math.max(1, Math.ceil(rows.length / pageCount));
-  const rowRem = Math.min(MAX_ROW_REM, space / perPage);
   const { pageItems, page, pages } = usePager(rows, perPage);
   return (
     <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-card">
