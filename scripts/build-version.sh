@@ -4,7 +4,7 @@
 # Version 1 = dark tables (23 Nov 2026), 2 = light tables (24-25 Nov), 3 = OEM redesign (25 Nov, current).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-declare -A COMMIT=( [1]=dac90a5 [2]=ed4f1de [3]=093aa58 )
+declare -A COMMIT=( [1]=b7158dd [2]=afb989e [3]=093aa58 )
 declare -A NAME=( [1]=dark-tables [2]=light-tables [3]=OEM-design )
 v="${1:-}"; [[ -n "${COMMIT[$v]:-}" ]] || { echo "Usage: $0 1|2|3"; exit 1; }
 out="versions/Version-$v-${NAME[$v]}.html"
