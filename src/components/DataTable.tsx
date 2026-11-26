@@ -9,23 +9,24 @@ export interface Column<T> {
   render: (row: T) => ReactNode;
 }
 
-const MAX_ROW_REM = 2.6;  // roomy rows when there are few
-const MIN_ROW_REM = 1.3;  // most compact row that is still readable on a TV
+const MAX_ROW_REM = 2.8;  // roomy rows when there are few
+const COMPACT_ROW_REM = 1.3; // default: most compact row that is still readable (Workshop Board: all bays on one screen)
 const CHROME_REM = 4.4;   // table header (2.4rem) + footer (2rem)
 
 // TV-friendly table. BU: the summary count must match what is on screen, so ALL rows are shown at once;
 // rows get more compact (down to MIN_ROW_REM) before the table falls back to showing page by page.
-export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, countLabel }: {
+export function DataTable<T>({ columns, rows, rowKey, rowClassName, empty, countLabel, minRowRem = COMPACT_ROW_REM }: {
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   rowClassName?: (row: T) => string;
   empty: string;
   countLabel: string;
+  minRowRem?: number; // rows never get smaller than this; more pages are used instead (lounge lists use 2.2)
 }) {
   const { ref, space } = useRowSpace(CHROME_REM);
   // Everything fits: one screen. Otherwise split into EVEN pages (e.g. 19 + 19, not 28 + 10).
-  const maxPerPage = Math.max(3, Math.floor(space / MIN_ROW_REM));
+  const maxPerPage = Math.max(3, Math.floor(space / minRowRem));
   const pageCount = Math.max(1, Math.ceil(rows.length / maxPerPage));
   const perPage = Math.max(1, Math.ceil(rows.length / pageCount));
   const rowRem = Math.min(MAX_ROW_REM, space / perPage);

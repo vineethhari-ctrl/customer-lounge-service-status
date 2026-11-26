@@ -21,6 +21,11 @@ const LIT_BARS: Record<string, number> = {
   "Gate In": 1, "Job Card": 1, "Estimate Approval": 1, "In Bay (WIP)": 2, "Washing": 3, "Ready for Delivery": 5,
 };
 
+// Lounge lists use roomy rows; more pages are used instead of squeezing. Appointments has more columns, so it gets a bit more room
+// (this keeps its rows as tall as Vehicle Status rows on every screen size).
+const STATUS_MIN_ROW_REM = 2.2;
+const APPT_MIN_ROW_REM = 2.5;
+
 const APPT_TONE: Record<AppointmentStatus, "green" | "grey" | "amber"> = { Arrived: "green", Expected: "grey", Late: "amber" };
 
 export function LoungeScreen({ user, onSignOut }: { user: PortalUser; onSignOut: () => void }) {
@@ -134,9 +139,11 @@ export function LoungeScreen({ user, onSignOut }: { user: PortalUser; onSignOut:
         </FilterBar>
         {tab === "appointments" ? (
           <DataTable columns={apptColumns} rows={appointments} rowKey={(a) => a.id}
+            minRowRem={APPT_MIN_ROW_REM}
             empty="No appointments today." countLabel={`${appointments.length} appointments today`} />
         ) : (
           <DataTable columns={statusColumns} rows={vehicles} rowKey={(v) => v.regNo}
+            minRowRem={STATUS_MIN_ROW_REM}
             empty="No vehicles in the workshop." countLabel={`${vehicles.length} vehicles in the workshop`} />
         )}
       </main>
