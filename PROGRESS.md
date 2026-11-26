@@ -86,8 +86,9 @@ Run: `npm install --legacy-peer-deps && npm run dev`; check: `npm run lint && np
 
 ## VERSIONS (user asks "give me version 1 / 2 / 3" -> send the matching HTML from `versions/`)
 - **Version 1** = dark BU tables, live 23 Nov 2026 (commit `dac90a5`)  -> `versions/Version-1-dark-tables.html`
-- **Version 2** = light Service Transformation tables with roomy rows, 26 Nov (commit `beb9f73`, branch `feature/version-2-spacing`; NOT on main, not deployed) -> `versions/Version-2-light-tables.html`
-  (the 24-25 Nov live build with tighter Appointments rows was commit `e7fd6cd`)
+- **Version 2** = light Service Transformation tables, fixed generous rows (lounge lists 2.9 rem, board 2.4 rem on every page/filter/size), 26 Nov
+  (commit `ed4f1de`, branch `feature/version-2-spacing`; NOT on main, not deployed) -> `versions/Version-2-light-tables.html`
+  Older builds of Version 2: `e7fd6cd` (24-25 Nov live, tight rows).
 - **Version 3** = OEM redesign with Bay group names, live from 25 Nov = current `main` (commit `093aa58`) -> `versions/Version-3-OEM-design.html`
 - Rebuild any of them: `scripts/build-version.sh 1|2|3` (needs `npm install` once). Open the HTML from a computer in Chrome/Edge, not inside Teams.
 - Older still: the original card UI (AI Studio export) is commit `be7fe86`; it needs its car images from the internet, so there is no HTML for it.
